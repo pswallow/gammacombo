@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
       //workspace->var(("tau_a_"+cat).c_str())->setMax(0.05*val);
   }
 
-  std::cout << ((RooFitResult*)workspace->obj("data_fit_result"))->floatParsFinal() <<std::endl;
+  //std::cout << ((RooFitResult*)workspace->obj("data_fit_result"))->floatParsFinal() <<std::endl;
 
   //workspace->Print();
 
@@ -167,7 +167,8 @@ int main(int argc, char* argv[])
   pdf->initPDF("model"); // this the name of the pdf in the workspace (without the constraints)
   pdf->initBkgPDF("bgModel"); // this the name of the background pdf in the workspace (without the constraints)
   pdf->initObservables("observables"); // non-global observables whose measurements are stored in the dataset (for example the mass).
-  pdf->initGlobalObservables("global_observables"); // global observables
+  //pdf->initGlobalObservables("global_observables"); // global observables
+  pdf->initGlobalObservables("constrained_variables"); // global observables
   pdf->initParameters("parameters"); // all parameters
   pdf->initConstraints("constraints"); // RooArgSet containing the "constraint" PDF's
   // the below are optional (will not effect the results but just make some plots for you)
