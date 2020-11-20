@@ -30,7 +30,6 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
     RooMsgService::instance().setGlobalKillBelow(ERROR);
     RooMsgService::instance().setSilentMode(kTRUE);
 
-    /*
     // Choose Dataset to fit to
     // unfortunately Minuit2 does not initialize the status of the roofitresult, if all parameters are constant. Therefore need to stay with standard Minuit fitting.
     // RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Minimizer("Minuit2", "Migrad"));
@@ -47,87 +46,10 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
     this->minNll = nll->getVal();
     std::cout << "Wifi: Fit Status=" << this->fitStatus << ": Nll=" << this->minNll <<std::endl;
     fitFile << "Fit Status=" << this->fitStatus << ": Nll=" << this->minNll <<std::endl;
-    */
-
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    RooAbsReal* nll = pdf->createNLL(*dataToFit, RooFit::Range("lsb,rsb"), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
-    //RooAbsReal* nll = pdf->createNLL(*dataToFit, RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
-    this->minNll = nll->getVal();
-    //subtract initial value from likelihood, to improve precision in case it's very large
-    double nll_init_val = nll->getVal(nll->getVariables());
-    //RooFormulaVar nll_toFit = RooFormulaVar("nll_norm", "@0-"+to_string(nll_init_val), RooArgList( (auto*)nll  ));
-    //RooAbsArg* arg = nll->createFundamental();
-    RooAbsArg* arg = (RooAbsArg*)nll;
-    std::string nllString= "@0-"+to_string(nll_init_val);
-    RooFormulaVar nll_toFit = RooFormulaVar("nll_norm", nllString.c_str() , RooArgList(*arg, "nll_list"));
-
-    RooMinimizer m = RooMinimizer(nll_toFit);
-    RooFitResult* result;
-    int i = 0;
-
-    TStopwatch t = TStopwatch();
-    t.Start();
-
-    std::cout << "Fitting with Simplex " << i << " t=";
-    t.Stop();
-    t.Print();
-    t.Start();
-    //m.simplex();
-    //loop until convergence
-    /*
-        -1 = Not Available
-         0 = Available but not positive definite
-         1 = covariance only approximate
-         2 = full matrix but forced positive definite
-         3 = Full Accurate matrix
-    */
-    while (i==0 or result->covQual()<3){
-        std::cout << "Fitting with Migrad " << i<< " t=";
-        t.Stop();
-        t.Print();
-        t.Start();
-        m.migrad();
-        std::cout << "Fitting with Hesse " << i<< " t=";
-        t.Stop();
-        t.Print();
-        t.Start();
-        m.hesse();
-        std::cout << "Saving Fit  " << i<< " t=";
-        t.Stop();
-        t.Print();
-        t.Start();
-        result = m.save();
-        std::cout << "Saved Fit " << i<< " t=";
-        t.Stop();
-        t.Print();
-        t.Start();
-        i=i+1;
-        std::cout << result->covQual() <<std::endl;
-        std::cout << "=====================================" <<std::endl;
-        
-        if (i>20){ //give up after N iterations
-                std::cout << "Fit keeps failing." <<std::endl;
-                exit(EXIT_FAILURE);
-        }
-    }
-
-    std::cout << "Fit Converged after " << i << " loops"<< " t=";
-    t.Stop();
-    t.Print();
-    result->Print("V");
-    this->fitStatus = result->status();
-
-    if(sanity){
-        plotting((plotDir+"SignalBGFit").c_str(), dataToFit, counterSB, 0);
-        counterSB=counterSB+1;
-    }
 
     RooMsgService::instance().setSilentMode(kFALSE);
     RooMsgService::instance().setGlobalKillBelow(INFO);
 
-    std::cout << "Wifi: Fit Status=" << this->fitStatus << ": Nll=" << this->minNll <<std::endl;
-    fitFile << "Fit Status=" << this->fitStatus << ": Nll=" << this->minNll <<std::endl;
 
     delete nll;
 
