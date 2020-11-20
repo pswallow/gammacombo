@@ -171,7 +171,7 @@ void MethodDatasetsPluginScan::initScan() {
     for ( int i = 1; i <= nPoints1d; i++ ) hChi2min->SetBinContent(i, 1e6);
 
     if ( scanVar2 != "" ) {
-        cout << "MethodDatasetsPluginScan::initScan(): EROR: Scanning in more than one dimension is not supported." << std::endl;
+      cout << "MethodDatasetsPluginScan::initScan(): EROR: Scanning in more than one dimension is not supported." << std::endl;
         exit(EXIT_FAILURE);
     }
 
@@ -890,7 +890,6 @@ double MethodDatasetsPluginScan::getPValueTTestStatistic(double test_statistic_v
 ///
 int MethodDatasetsPluginScan::scan1d(int nRun)
 {
-
     // //current working directory
     // boost::filesystem::path full_path( boost::filesystem::initial_path<boost::filesystem::path>() );
     // std::cout<<"initial path according to boost "<<full_path<<std::endl;
@@ -936,8 +935,8 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
 		// if CLs toys we need to keep hold of what's going on in the bkg only case
     // there is a small overhead here but it's necessary because the bkg only hypothesis
     // might not necessarily be in the scan range (although often it will be the first point)
-	vector<RooDataSet*> cls_bkgOnlyToys;
-	vector<TString> bkgOnlyGlobObsSnaphots;
+    vector<RooDataSet*> cls_bkgOnlyToys;
+    vector<TString> bkgOnlyGlobObsSnaphots;
     vector<float> chi2minGlobalBkgToysStore;    // Global fit to bkg-only toys
     vector<float> chi2minBkgBkgToysStore;       // Bkg fit to bkg-only toys
     vector<float> scanbestBkgToysStore;         // best fit point of gloabl fit to bkg-only toys 
@@ -953,7 +952,6 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
         nActualToys = nToys*importance(plhPvalue);
     }
     for ( int j = 0; j < nActualToys; j++ ) {
-        // std::cout << "Toy " << j << std::endl;
       if(pdf->getBkgPdf()){
         Utils::setParameters(w,dataBkgFitResult); //set parameters to bkg fit so the generation always starts at the same value
         // pdf->printParameters();
@@ -1017,7 +1015,6 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
                 assert(rb);
             }
         }
-
 
         if (std::isinf(pdf->minNll) || std::isnan(pdf->minNll)) {
             cout  << "++++ > second and a half fit gives inf/nan: "  << endl
@@ -1098,7 +1095,6 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
     ProgressBar progressBar(arg, nPoints1d);
     for ( int i = 0; i < nPoints1d; i++ )
     {
-
 				toyTree.npoint = i;
 
 				progressBar.progress();
@@ -1506,7 +1502,7 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
                             parameterToScan->setVal(static_cast<RooRealVar*>(r1->floatParsFinal().find(parameterToScan->GetName()))->getVal());
                             delete r_tmp;
                         }
-                        delete parsAfterScanFit;
+                        if(parsAfterScanFit) delete parsAfterScanFit;
                     };
                     if (arg->debug) {
                         cout  << "===== > compare free fit result with pdf parameters: " << endl;
@@ -1810,6 +1806,10 @@ void MethodDatasetsPluginScan::setAndPrintFitStatusConstrainedToys(const ToyTree
         case 1:
             pdf->setFitStatus(-12);
             break;
+        //Paul: Addition of case 4
+        case 4:
+            pdf->setFitStatus(-40);
+            break;
         case -1:
             pdf->setFitStatus(-33);
             break;
@@ -1873,6 +1873,14 @@ void MethodDatasetsPluginScan::setAndPrintFitStatusConstrainedToys(const ToyTree
                   << "----> free fit min nll:" << pdf->getMinNllFree() << endl;
             cout  << std::setprecision(6);
             break;
+        //Paul: Addition of case -40
+        case -40:
+            cout  << "----> free fit has status 4 and creates a negative test statistic" << endl
+                  << "----> dChi2: " << 2 * (pdf->getMinNllScan() - pdf->getMinNllFree()) << endl
+                  << "----> scan fit min nll:" << pdf->getMinNllScan() << endl
+                  << "----> free fit min nll:" << pdf->getMinNllFree() << endl;
+            cout  << std::setprecision(6);
+            break;
         default:
             cout << "-----> unknown / fitResult neg test stat, but status" << pdf->getFitStatus() << endl;
             break;
@@ -1904,6 +1912,12 @@ void MethodDatasetsPluginScan::setAndPrintFitStatusFreeToys(const ToyTree& toyTr
 
         case -1:
             cout << "----> fit results in status -1" << endl;
+            cout << "----> NLL value: " << pdf->minNll << endl;
+            // cout << "----> edm: " << r->edm() << endl;
+            break;
+        //Paul: Added case 4
+        case 4:
+            cout << "----> fit results in status 4" << endl;
             cout << "----> NLL value: " << pdf->minNll << endl;
             // cout << "----> edm: " << r->edm() << endl;
             break;

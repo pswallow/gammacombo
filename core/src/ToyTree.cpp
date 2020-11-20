@@ -18,7 +18,7 @@ ToyTree::ToyTree(PDF_Datasets *p, OptParser* opt, TChain* t){
 	this->pdfName  = "pdf_"+p->getPdfName();
 	this->obsName  = p->getObsName();
 	this->parsName = p->getParName();
-  this->globName = p->getGlobalObsName();
+        this->globName = p->getGlobalObsName();
 	this->thName   = "";
 	this->initMembers(t);
 	this->storeObs  = false;

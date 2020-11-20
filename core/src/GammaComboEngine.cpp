@@ -30,6 +30,8 @@ GammaComboEngine::GammaComboEngine(TString name, int argc, char* argv[]):
 	if ( arg->interactive ) theApp = new TApplication("App", &argc, argv);
 	else gROOT->SetBatch(false);
 
+        if ( arg->sanity ) gROOT->SetBatch(true);
+
 	// initialize members
 	plot = 0;
 
@@ -2231,7 +2233,6 @@ void GammaComboEngine::scanDataSet()
   // PROB - DATASETS
   //
   /////////////////////////////////////////////////////
-
   if ( !arg->isAction("plugin") && !arg->isAction("pluginbatch") && !arg->isAction("coverage") && !arg->isAction("coveragebatch") && !arg->isAction("bb") && !arg->isAction("bbbatch") )
   {
     MethodDatasetsProbScan* probScanner = new MethodDatasetsProbScan( (PDF_Datasets*) pdf[0], arg);

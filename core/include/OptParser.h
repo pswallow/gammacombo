@@ -163,6 +163,9 @@ class OptParser
 		vector<TString> var;
 		bool		verbose;
 
+                //Paul:
+		bool		sanity;
+
     CmdLine cmd;
 
 	private:

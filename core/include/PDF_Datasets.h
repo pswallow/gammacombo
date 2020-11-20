@@ -100,6 +100,10 @@ public:
    TString         globalObsBkgToySnapshotName = "globalObsBkgToySnapshotName";
     //> name of a snapshot that stores the latest simulated values for the global observables of the bkg-only toy
 
+    //Paul: Addition
+    std::ofstream fitFile = std::ofstream("FitStatus.txt");
+    std::ofstream fitBGFile = std::ofstream("FitBGStatus.txt");
+
 protected:
     void initializeRandomGenerator(int seedShift);
     RooWorkspace*   wspc;

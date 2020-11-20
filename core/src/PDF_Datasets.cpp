@@ -29,6 +29,7 @@ PDF_Datasets::PDF_Datasets(RooWorkspace* w, int nObs, OptParser* opt)
     minNllFree      = 0;
     minNllScan      = 0;
     minNll          = 0;
+
 };
 
 PDF_Datasets::PDF_Datasets(RooWorkspace* w)
@@ -68,6 +69,7 @@ void PDF_Datasets::initData(const TString& name) {
         exit(EXIT_FAILURE);
     }
     if(pdf) this->minNll = pdf->createNLL(*data)->getVal();
+    std::cout << "initData minNLL = " << this->minNll <<std::endl;
     std::cout << "INFO in PDF_Datasets::initData -- Data initialized" << std::endl;
     return;
 };
@@ -156,6 +158,8 @@ void PDF_Datasets::initPDF(const TString& name) {
 
     std::cout << "INFO in PDF_Datasets::initPDF -- PDF initialized" << std::endl;
     if(data) this->minNll = pdf->createNLL(*data)->getVal();
+    //if(data) this->minNll = pdf->createNLL(*data, RooFit::Extended(kTRUE), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)))->getVal();
+    std::cout << "(initPDF) PenguinNll: " << this->minNll <<std::endl;
     return;
 };
 
