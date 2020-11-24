@@ -159,6 +159,8 @@ int main(int argc, char* argv[])
   // Construct the PDF and pass the workspace to it
   //    note that you can write your own PDF_DatasetsTutorial Class which defines your own fitting procedure etc.
   //    this should inherit from PDF_Datasets
+  
+  Utils::setParameters(workspace, (RooFitResult*)workspace->genobj("data_fit_result"));
 
 
   //PDF_Datasets* pdf = new PDF_Datasets(workspace);

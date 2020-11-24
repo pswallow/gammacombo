@@ -20,20 +20,16 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
         exit(EXIT_FAILURE);
     }
 
-    /*
-    RooWorkspace* w = this->getWorkspace();
-    RooRealVar* m_var = w->var(massVarName.c_str());
-    m_var->setRange("full", 4720, 6520);
-    m_var->setRange("lsb", 4720, 5000);
-    m_var->setRange("rsb", 5800, 6520);
-    */
+    getWorkspace()->var(massVarName.c_str())->setRange("full", 4720, 6520);
+    getWorkspace()->var(massVarName.c_str())->setRange("lsb", 4720, 5000);
+    getWorkspace()->var(massVarName.c_str())->setRange("rsb", 5800, 6520);
 
     // Turn off RooMsg
     RooMsgService::instance().setGlobalKillBelow(ERROR);
     RooMsgService::instance().setSilentMode(kTRUE);
 
-    //RooAbsReal* nll = pdf->createNLL(*dataToFit,RooFit::Range("lsb,rsb"),RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
-    RooAbsReal* nll = pdf->createNLL(*dataToFit, RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
+    RooAbsReal* nll = pdf->createNLL(*dataToFit,RooFit::Range("lsb,rsb"),RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
+    //RooAbsReal* nll = pdf->createNLL(*dataToFit, RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
     this->minNll = nll->getVal();
     //subtract initial value from likelihood, to improve precision in case it's very large
     double nll_init_val = nll->getVal(nll->getVariables());
@@ -42,14 +38,14 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
     RooFormulaVar nll_toFit = RooFormulaVar("nll_norm", nllString.c_str() , RooArgList(*arg, "nll_list"));
 
     RooMinimizer m = RooMinimizer(nll_toFit);
+    //RooMinimizer m = RooMinimizer(*nll);
     m.setStrategy(this->fitStrategy);
     m.setMaxFunctionCalls(500000);
-    m.setMaxIterations(100000);
+    //m.setMaxIterations(100000);
     RooFitResult* result;
     int i = 0;
 
     std::cout << "=====================================" <<std::endl;
-
     m.simplex();
     //loop until convergence
     /*
@@ -118,13 +114,17 @@ RooFitResult* PDF_DatasetCustom::fitBkg(RooDataSet* dataToFit) {
     getWorkspace()->var("BFsig")->setVal(0.0);
     getWorkspace()->var("BFsig")->setConstant(true);
 
+    getWorkspace()->var(massVarName.c_str())->setRange("full", 4720, 6520);
+    getWorkspace()->var(massVarName.c_str())->setRange("lsb", 4720, 5000);
+    getWorkspace()->var(massVarName.c_str())->setRange("rsb", 5800, 6520);
+
     // Turn off RooMsg
     RooMsgService::instance().setGlobalKillBelow(ERROR);
     RooMsgService::instance().setSilentMode(kTRUE);
     // Choose Dataset to fit to
 
-    //RooAbsReal* nll = pdf->createNLL(*dataToFit, RooFit::Range(__class.m_range), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
-    RooAbsReal* nll_bkg = pdfBkg->createNLL(*dataToFit, RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
+    RooAbsReal* nll_bkg = pdf->createNLL(*dataToFit, RooFit::Range("lsb,rsb"), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
+    //RooAbsReal* nll_bkg = pdfBkg->createNLL(*dataToFit, RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
     this->minNllBkg = nll_bkg->getVal();
     //subtract initial value from likelihood, to improve precision in case it's very large
     double nll_bkg_init_val = nll_bkg->getVal(nll_bkg->getVariables());
@@ -133,9 +133,10 @@ RooFitResult* PDF_DatasetCustom::fitBkg(RooDataSet* dataToFit) {
     RooFormulaVar nll_bkg_toFit = RooFormulaVar("nll_bkg_norm", nllString.c_str(), RooArgList(*arg, "nll_bkg_list"));
 
     RooMinimizer m = RooMinimizer(nll_bkg_toFit);
+    //RooMinimizer m = RooMinimizer(*nll_bkg);
     m.setStrategy(this->fitStrategy);
     m.setMaxFunctionCalls(500000);
-    m.setMaxIterations(100000);
+    //m.setMaxIterations(100000);
     RooFitResult* result;
     int i = 0;
 
@@ -234,11 +235,9 @@ void PDF_DatasetCustom::generateBkgToys(int SeedShift) {
 
 
 void PDF_DatasetCustom::plotting(std::string plotString, RooDataSet* data, int count, bool isToy){
-    RooWorkspace* w = this->getWorkspace();
-    RooRealVar* m_var = w->var(massVarName.c_str());
-    m_var->setRange("full", 4720, 6520);
-    m_var->setRange("lsb", 4720, 5000);
-    m_var->setRange("rsb", 5800, 6520);
+    getWorkspace()->var(massVarName.c_str())->setRange("full", 4720, 6520);
+    getWorkspace()->var(massVarName.c_str())->setRange("lsb", 4720, 5000);
+    getWorkspace()->var(massVarName.c_str())->setRange("rsb", 5800, 6520);
     
     if(!isToy){
         std::string categories[8] = {"Brem_DD_Run1","Brem_LL_Run1","NoBrem_DD_Run1","NoBrem_LL_Run1","Brem_DD_Run2","Brem_LL_Run2","NoBrem_DD_Run2","NoBrem_LL_Run2"};
@@ -246,11 +245,11 @@ void PDF_DatasetCustom::plotting(std::string plotString, RooDataSet* data, int c
         for(int i=0; i<8; i++){
             std::string cat = categories[i];
             TCanvas* canvas = new TCanvas(Form("c%i",i),Form("c%i",i),600,600);
-            RooPlot* frame = w->var(massVarName.c_str())->frame();
+            RooPlot* frame = getWorkspace()->var(massVarName.c_str())->frame();
             std::string cutting = "category==category::"+cat;
             data->plotOn(frame,RooFit::Cut(cutting.c_str()));
             //pdf->plotOn(frame);
-            RooCategory* slicedCategory = w->cat("category");
+            RooCategory* slicedCategory = getWorkspace()->cat("category");
             pdf->plotOn(frame,RooFit::Slice(*slicedCategory,cat.c_str()), RooFit::ProjWData(*data), RooFit::NormRange("lsb,rsb"));
 
             frame->Draw();
@@ -261,7 +260,7 @@ void PDF_DatasetCustom::plotting(std::string plotString, RooDataSet* data, int c
     }
     else{
             TCanvas* canvas = new TCanvas("cToy","cToy",600,600);
-            RooPlot* frame = w->var(massVarName.c_str())->frame();
+            RooPlot* frame = getWorkspace()->var(massVarName.c_str())->frame();
             data->plotOn(frame);
             pdf->plotOn(frame,RooFit::ProjWData(*data), RooFit::NormRange("full"));
             frame->Draw();
