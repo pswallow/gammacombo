@@ -33,7 +33,9 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
     // Choose Dataset to fit to
     // unfortunately Minuit2 does not initialize the status of the roofitresult, if all parameters are constant. Therefore need to stay with standard Minuit fitting.
     // RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Minimizer("Minuit2", "Migrad"));
-    RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Extended(kTRUE));
+    //RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Extended(kTRUE));
+    RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Extended(kTRUE),
+                                        RooMinimizer::setMaxIterations(100000) );
 
     if(sanity){
         plotting((plotDir+"SignalBGFit").c_str(), dataToFit, counterSB, 0);
@@ -86,7 +88,6 @@ RooFitResult* PDF_DatasetCustom::fitBkg(RooDataSet* dataToFit) {
     RooMsgService::instance().setSilentMode(kTRUE);
     // Choose Dataset to fit to
 
-    /*
     // unfortunately Minuit2 does not initialize the status of the roofitresult, if all parameters are constant. Therefore need to stay with standard Minuit fitting.
     // RooFitResult* result  = pdfBkg->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Minimizer("Minuit2", "Migrad"));
 
@@ -109,61 +110,6 @@ RooFitResult* PDF_DatasetCustom::fitBkg(RooDataSet* dataToFit) {
     this->minNllBkg = nll_bkg->getVal();
     std::cout << "Intranet: Fit Status=" << this->fitStatus << ": Nll=" << this->minNllBkg <<std::endl;
     fitBGFile << "Fit Status=" << this->fitStatus << ": Nll=" << this->minNllBkg <<std::endl;
-    getWorkspace()->var("BFsig")->setVal(parvalue);
-    getWorkspace()->var("BFsig")->setConstant(isconst);    
-    */
-
-    ////////////////////////////////////////////////////////////////////////////////////
-
-    //RooAbsReal* nll = pdf->createNLL(*dataToFit, RooFit::Range(__class.m_range), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
-    RooAbsReal* nll_bkg = pdfBkg->createNLL(*dataToFit, RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Extended(kTRUE)); 
-    this->minNllBkg = nll_bkg->getVal();
-    //subtract initial value from likelihood, to improve precision in case it's very large
-    double nll_bkg_init_val = nll_bkg->getVal(nll_bkg->getVariables());
-    RooAbsArg* arg = (RooAbsArg*)nll_bkg;
-    std::string nllString= "@0-"+to_string(nll_bkg_init_val);
-    RooFormulaVar nll_bkg_toFit = RooFormulaVar("nll_bkg_norm", nllString.c_str(), RooArgList(*arg, "nll_bkg_list"));
-
-    RooMinuit m = RooMinuit(nll_bkg_toFit);
-    RooFitResult* result;
-    int i = 0;
-
-    m.simplex();
-    //loop until convergence
-    /*
-        -1 = Not Available
-         0 = Available but not positive definite
-         1 = covariance only approximate
-         2 = full matrix but forced positive definite
-         3 = Full Accurate matrix
-    */
-    while (i==0 or result->covQual()<3){
-        m.migrad();
-        m.hesse();
-        result = m.save();
-        i=i+1;
-        std::cout << result->covQual() <<std::endl;
-        
-        if (i>20){ //give up after N iterations
-                std::cout << "Fit keeps failing." <<std::endl;
-                exit(EXIT_FAILURE);
-        }
-    }
-
-    std::cout << "Fit Converged after " << i << " loops" <<std::endl;
-    result->Print("V");
-    this->fitStatus = result->status();
-
-    if(sanity){
-        plotting((plotDir+"BackgroundFit").c_str(), dataToFit, counterBG, 0);
-        counterBG=counterBG+1;
-    }
-
-    RooMsgService::instance().setSilentMode(kFALSE);
-    RooMsgService::instance().setGlobalKillBelow(INFO);
-
-    std::cout << "Intranet: Fit Status=" << this->fitStatus << " : Nll=" << this->minNllBkg <<std::endl;
-    fitBGFile << "Fit Status=" << this->fitStatus << " : Nll=" << this->minNllBkg <<std::endl;
     getWorkspace()->var("BFsig")->setVal(parvalue);
     getWorkspace()->var("BFsig")->setConstant(isconst);    
 
