@@ -42,16 +42,14 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
     RooFormulaVar nll_toFit = RooFormulaVar("nll_norm", nllString.c_str() , RooArgList(*arg, "nll_list"));
 
     RooMinimizer m = RooMinimizer(nll_toFit);
+    m.setStrategy(this->fitStrategy);
+    m.setMaxFunctionCalls(500000);
+    m.setMaxIterations(100000);
     RooFitResult* result;
     int i = 0;
 
-    TStopwatch t = TStopwatch();
-    t.Start();
+    std::cout << "=====================================" <<std::endl;
 
-    std::cout << "Fitting with Simplex " << i << " t=";
-    t.Stop();
-    t.Print();
-    t.Start();
     m.simplex();
     //loop until convergence
     /*
@@ -62,41 +60,20 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
          3 = Full Accurate matrix
     */
     while (i==0 or result->covQual()<3){
-        std::cout << "Fitting with Migrad " << i<< " t=";
-        t.Stop();
-        t.Print();
-        t.Start();
         m.migrad();
-        std::cout << "Fitting with Hesse " << i<< " t=";
-        t.Stop();
-        t.Print();
-        t.Start();
         m.hesse();
-        std::cout << "Saving Fit  " << i<< " t=";
-        t.Stop();
-        t.Print();
-        t.Start();
         result = m.save();
-        std::cout << "Saved Fit " << i<< " t=";
-        t.Stop();
-        t.Print();
-        t.Start();
         i=i+1;
-        std::cout << result->covQual() <<std::endl;
-        std::cout << "=====================================" <<std::endl;
-        std::cout << "=====================================" <<std::endl;
-        std::cout << "=====================================" <<std::endl;
+        std::cout << "covQual=" << result->covQual() <<std::endl;
+        std::cout << "FitStatus=" << result->status() <<std::endl;
         
-        if (i>10){ //give up after N iterations
+        if (i>100){ //give up after N iterations
                 std::cout << "Fit keeps failing." <<std::endl;
                 exit(EXIT_FAILURE);
         }
     }
 
-    std::cout << "Fit Converged after " << i << " loops"<< " t=";
-    t.Stop();
-    t.Print();
-    result->Print("V");
+    std::cout << "Fit Converged after " << i << " loops"<<std::endl;
     this->fitStatus = result->status();
 
     if(sanity){
@@ -109,6 +86,7 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
 
     std::cout << "Wifi: Fit Status=" << this->fitStatus << ": Nll=" << this->minNll <<std::endl;
     fitFile << "Fit Status=" << this->fitStatus << ": Nll=" << this->minNll <<std::endl;
+    std::cout << "=====================================" <<std::endl;
 
     delete nll;
 
@@ -154,7 +132,10 @@ RooFitResult* PDF_DatasetCustom::fitBkg(RooDataSet* dataToFit) {
     std::string nllString= "@0-"+to_string(nll_bkg_init_val);
     RooFormulaVar nll_bkg_toFit = RooFormulaVar("nll_bkg_norm", nllString.c_str(), RooArgList(*arg, "nll_bkg_list"));
 
-    RooMinuit m = RooMinuit(nll_bkg_toFit);
+    RooMinimizer m = RooMinimizer(nll_bkg_toFit);
+    m.setStrategy(this->fitStrategy);
+    m.setMaxFunctionCalls(500000);
+    m.setMaxIterations(100000);
     RooFitResult* result;
     int i = 0;
 
@@ -174,14 +155,13 @@ RooFitResult* PDF_DatasetCustom::fitBkg(RooDataSet* dataToFit) {
         i=i+1;
         std::cout << result->covQual() <<std::endl;
         
-        if (i>20){ //give up after N iterations
+        if (i>100){ //give up after N iterations
                 std::cout << "Fit keeps failing." <<std::endl;
                 exit(EXIT_FAILURE);
         }
     }
 
     std::cout << "Fit Converged after " << i << " loops" <<std::endl;
-    result->Print("V");
     this->fitStatus = result->status();
 
     if(sanity){

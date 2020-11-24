@@ -176,6 +176,7 @@ int main(int argc, char* argv[])
   //pdf->unblind(massVarname,"[4360:5260],[5460:6360]"); // have to be a bit careful about staying blind (this code isn't yet really blind friendly)
   //pdf->unblind("mass", "[4360:6360]" );
   pdf->massVarName=massVarname;
+  pdf->setFitStrategy(0);
 
   pdf->plotDir="plots/pdf/LikelihoodScan/";
   pdf->sanity = false;
