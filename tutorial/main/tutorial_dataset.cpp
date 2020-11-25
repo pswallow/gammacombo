@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
   std::string fit_string = "data_fit_result_"+category;
   std::string workspace_location = std::getenv("LB2LEMUROOT")+std::string("/gammacombo/tutorial/Workspaces/");
   //std::string workspace_name = "Lb2Lemu_wsOld_WithPDFs.root";
-  std::string workspace_name = "Lb2Lemu_wsOld_gammaCombo2.root";
+  std::string workspace_name = "Lb2Lemu_wsOld_gammaCombo3.root";
 
   // Load the workspace from its file
   //TFile f("workspace.root");
