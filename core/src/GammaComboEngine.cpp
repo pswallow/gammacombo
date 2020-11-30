@@ -768,27 +768,27 @@ void GammaComboEngine::print()
 ///
 void GammaComboEngine::checkCombinationArg()
 {
-	if ( runOnDataSet && arg->combid.size()>0 ) {
-    cout << "When running on a dataset do not pass a combination argument (it makes no sense for this use case)" << endl;
-    exit(1);
-  }
-  if ( arg->combid.size()==0 && !runOnDataSet){
+    if ( runOnDataSet && arg->combid.size()>0 ) {
+        cout << "When running on a dataset do not pass a combination argument (it makes no sense for this use case)" << endl;
+        exit(1);
+    }
+    if ( arg->combid.size()==0 && !runOnDataSet){
 		cout << "Please chose a combination ID (-c).\n" << endl;
 		printCombinations();
 		exit(1);
-	}
-	for ( int i=0; i<arg->combid.size(); i++ ){
-		if ( arg->combid[i] >= cmb.size() ){
-			cout << "Please chose a combination ID (-c) less than " << cmb.size()
-				<< ".\nUse the -u option to print a list of available combinations." << endl;
-			exit(1);
-		}
-		if ( cmb[arg->combid[i]]==0 ){
-			cout << "You selected an empty combination.\n"
-				<< "Use the -u option to print a list of available combinations." << endl;
-			exit(1);
-		}
-	}
+    }
+    for ( int i=0; i<arg->combid.size(); i++ ){
+        if ( arg->combid[i] >= cmb.size() ){
+                cout << "Please chose a combination ID (-c) less than " << cmb.size()
+                        << ".\nUse the -u option to print a list of available combinations." << endl;
+                exit(1);
+        }
+        if ( cmb[arg->combid[i]]==0 ){
+                cout << "You selected an empty combination.\n"
+                        << "Use the -u option to print a list of available combinations." << endl;
+                exit(1);
+        }
+    }
 }
 
 ///
@@ -1292,24 +1292,24 @@ void GammaComboEngine::make1dProbPlot(MethodProbScan *scanner, int cId)
 {
 
   	if (!arg->isAction("pluginbatch") && !arg->plotpluginonly){
-		scanner->setDrawSolution(arg->plotsolutions[cId]);
-		if(arg->isAction("plugin")||arg->isAction("plot")) scanner->computeCLvalues();	// compute new CL values depending on test stat, even if not a rescan is wished
-    	if ( arg->cls.size()>0 ) {
-      		if ( runOnDataSet ) ((MethodDatasetsProbScan*)scanner)->plotFitRes(m_fnamebuilder->getFileNamePlot(cmb)+"_fit");
-      		scanner->plotOn(plot, 1); // for prob ClsType>1 doesn't exist
-    	}
-		scanner->plotOn(plot);
-		int colorId = cId;
-		if ( arg->color.size()>cId ) colorId = arg->color[cId];
-		//scanner->setLineColor(colorsLine[colorId]);
-		scanner->setTextColor(colorsText[colorId]);
-	    scanner->setLineColor(lineColors[cId]);
-	    scanner->setLineStyle(lineStyles[cId]);
-	    scanner->setLineWidth(lineWidths[cId]);
-	    scanner->setFillColor(fillColors[cId]);
-	    scanner->setFillStyle(fillStyles[cId]);
-	    scanner->setFillTransparency(fillTransparencies[cId]);
-		plot->Draw();
+	    scanner->setDrawSolution(arg->plotsolutions[cId]);
+	    if(arg->isAction("plugin")||arg->isAction("plot")) scanner->computeCLvalues();  // compute new CL values depending on test stat, even if not a rescan is wished
+            if ( arg->cls.size()>0 ) {
+                    if ( runOnDataSet ) ((MethodDatasetsProbScan*)scanner)->plotFitRes(m_fnamebuilder->getFileNamePlot(cmb)+"_fit");
+                    scanner->plotOn(plot, 1); // for prob ClsType>1 doesn't exist
+            }
+            scanner->plotOn(plot);
+            int colorId = cId;
+            if ( arg->color.size()>cId ) colorId = arg->color[cId];
+            //scanner->setLineColor(colorsLine[colorId]);
+            scanner->setTextColor(colorsText[colorId]);
+            scanner->setLineColor(lineColors[cId]);
+            scanner->setLineStyle(lineStyles[cId]);
+            scanner->setLineWidth(lineWidths[cId]);
+            scanner->setFillColor(fillColors[cId]);
+            scanner->setFillStyle(fillStyles[cId]);
+            scanner->setFillTransparency(fillTransparencies[cId]);
+            plot->Draw();
 	}
 }
 
@@ -2237,7 +2237,7 @@ void GammaComboEngine::scanDataSet()
   {
     MethodDatasetsProbScan* probScanner = new MethodDatasetsProbScan( (PDF_Datasets*) pdf[0], arg);
 
-		// 1D SCANS
+    // 1D SCANS
     if ( arg->var.size()==1 )
     {
       if ( arg->isAction("plot") ) {
@@ -2248,17 +2248,17 @@ void GammaComboEngine::scanDataSet()
       }
       make1dProbPlot(probScanner,0);
     }
-		// 2D SCANS
-		else if ( arg->var.size()==2 )
-		{
-			if ( arg->isAction("plot") ){
-				probScanner->loadScanner(m_fnamebuilder->getFileNameScanner(probScanner));
-			}
-			else{
-				make2dProbScan(probScanner, 0);
-			}
-			make2dProbPlot(probScanner, 0);
-		}
+    // 2D SCANS
+    else if ( arg->var.size()==2 )
+    {
+            if ( arg->isAction("plot") ){
+                    probScanner->loadScanner(m_fnamebuilder->getFileNameScanner(probScanner));
+            }
+            else{
+                    make2dProbScan(probScanner, 0);
+            }
+            make2dProbPlot(probScanner, 0);
+    }
   }
 
 	/////////////////////////////////////////////////////
@@ -2267,66 +2267,66 @@ void GammaComboEngine::scanDataSet()
   //
   /////////////////////////////////////////////////////
 
-	if(arg->isAction("pluginbatch") || arg->isAction("plugin"))
-	{
-		// 1D SCANS
-		if ( arg->var.size()==1 )
-		{
-				if ( arg->isAction("pluginbatch") ){
-					MethodDatasetsProbScan* scannerProb = new MethodDatasetsProbScan( (PDF_Datasets*) pdf[0], arg);
-					if ( FileExists( m_fnamebuilder->getFileNameScanner(scannerProb)) ) {
-							scannerProb->initScan();
-							scannerProb->loadScanner( m_fnamebuilder->getFileNameScanner(scannerProb));
-					}
-					else{
-							cout << "\nWARNING : Couldn't load the Prob scanner, will rerun the Prob" << endl;
-							cout <<   "          scan now. You should have run the Prob scan locally" << endl;
-							cout <<   "          before running the Plugin scan." << endl;
-							cout <<   "          missing file: " << m_fnamebuilder->getFileNameScanner(scannerProb) << endl;
-							cout << endl;
-							make1dProbScan(scannerProb, 0);
-					}
-					MethodDatasetsPluginScan *scannerPlugin = new MethodDatasetsPluginScan( scannerProb, (PDF_Datasets*) pdf[0], arg);
-					make1dPluginScan(scannerPlugin, 0 );
-				}
-				else if ( arg->isAction("plugin") ) {
-					MethodDatasetsProbScan* scannerProb = new MethodDatasetsProbScan( (PDF_Datasets*) pdf[0], arg);
-					if ( !arg->plotpluginonly || ( arg->plotpluginonly && !arg->isAction("plot") ) ) {
-						if ( FileExists( m_fnamebuilder->getFileNameScanner(scannerProb)) ) {
-							scannerProb->initScan();
-							scannerProb->loadScanner( m_fnamebuilder->getFileNameScanner(scannerProb));
-						}
-						else {
-							cout << "\nWARNING : Couldn't load the Prob scanner, will rerun the Prob" << endl;
-							cout <<   "          scan now. You should have run the Prob scan locally" << endl;
-							cout <<   "          before running the Plugin scan." << endl;
-							cout <<   "          missing file: " << m_fnamebuilder->getFileNameScanner(scannerProb) << endl;
-							cout << endl;
-							make1dProbScan(scannerProb, 0);
-						}
-					}
-					// create Plugin scanner
-					MethodDatasetsPluginScan *scannerPlugin = new MethodDatasetsPluginScan( scannerProb, (PDF_Datasets*) pdf[0], arg );
-					if ( arg->isAction("plot") ){
-						scannerPlugin->loadScanner(m_fnamebuilder->getFileNameScanner(scannerPlugin));
-					}
-					else {
-						make1dPluginScan(scannerPlugin, 0);
-					}
-					if ( arg->plotpluginonly ){
-						make1dPluginOnlyPlot(scannerPlugin, 0);
-					}
-					else {
-						make1dPluginPlot(scannerPlugin, scannerProb, 0);
-					}
-				}
-		}
-		else if ( arg->var.size()==2 ) {
-			cout << "SORRY - 2D plugin scans not yet implemented for datasets - this will probably take a while anyway" << endl;
-			exit(1);
-		}
-	}
-	cout << "Dataset Scan Done" << endl;
+    if(arg->isAction("pluginbatch") || arg->isAction("plugin"))
+    {
+            // 1D SCANS
+            if ( arg->var.size()==1 )
+            {
+                            if ( arg->isAction("pluginbatch") ){
+                                    MethodDatasetsProbScan* scannerProb = new MethodDatasetsProbScan( (PDF_Datasets*) pdf[0], arg);
+                                    if ( FileExists( m_fnamebuilder->getFileNameScanner(scannerProb)) ) {
+                                                    scannerProb->initScan();
+                                                    scannerProb->loadScanner( m_fnamebuilder->getFileNameScanner(scannerProb));
+                                    }
+                                    else{
+                                                    cout << "\nWARNING : Couldn't load the Prob scanner, will rerun the Prob" << endl;
+                                                    cout <<   "          scan now. You should have run the Prob scan locally" << endl;
+                                                    cout <<   "          before running the Plugin scan." << endl;
+                                                    cout <<   "          missing file: " << m_fnamebuilder->getFileNameScanner(scannerProb) << endl;
+                                                    cout << endl;
+                                                    make1dProbScan(scannerProb, 0);
+                                    }
+                                    MethodDatasetsPluginScan *scannerPlugin = new MethodDatasetsPluginScan( scannerProb, (PDF_Datasets*) pdf[0], arg);
+                                    make1dPluginScan(scannerPlugin, 0 );
+                            }
+                            else if ( arg->isAction("plugin") ) {
+                                    MethodDatasetsProbScan* scannerProb = new MethodDatasetsProbScan( (PDF_Datasets*) pdf[0], arg);
+                                    if ( !arg->plotpluginonly || ( arg->plotpluginonly && !arg->isAction("plot") ) ) {
+                                            if ( FileExists( m_fnamebuilder->getFileNameScanner(scannerProb)) ) {
+                                                    scannerProb->initScan();
+                                                    scannerProb->loadScanner( m_fnamebuilder->getFileNameScanner(scannerProb));
+                                            }
+                                            else {
+                                                    cout << "\nWARNING : Couldn't load the Prob scanner, will rerun the Prob" << endl;
+                                                    cout <<   "          scan now. You should have run the Prob scan locally" << endl;
+                                                    cout <<   "          before running the Plugin scan." << endl;
+                                                    cout <<   "          missing file: " << m_fnamebuilder->getFileNameScanner(scannerProb) << endl;
+                                                    cout << endl;
+                                                    make1dProbScan(scannerProb, 0);
+                                            }
+                                    }
+                                    // create Plugin scanner
+                                    MethodDatasetsPluginScan *scannerPlugin = new MethodDatasetsPluginScan( scannerProb, (PDF_Datasets*) pdf[0], arg );
+                                    if ( arg->isAction("plot") ){
+                                            scannerPlugin->loadScanner(m_fnamebuilder->getFileNameScanner(scannerPlugin));
+                                    }
+                                    else {
+                                            make1dPluginScan(scannerPlugin, 0);
+                                    }
+                                    if ( arg->plotpluginonly ){
+                                            make1dPluginOnlyPlot(scannerPlugin, 0);
+                                    }
+                                    else {
+                                            make1dPluginPlot(scannerPlugin, scannerProb, 0);
+                                    }
+                            }
+            }
+            else if ( arg->var.size()==2 ) {
+                    cout << "SORRY - 2D plugin scans not yet implemented for datasets - this will probably take a while anyway" << endl;
+                    exit(1);
+            }
+    }
+    cout << "Dataset Scan Done" << endl;
 }
 
 
@@ -2364,16 +2364,16 @@ void GammaComboEngine::run()
 	checkCombinationArg();
 	checkColorArg();
 	checkAsimovArg();
-  if ( arg->scalestaterr > -99 ) scaleStatErrors();
-  if ( arg->scaleerr > -99 ) scaleStatAndSystErrors();
-  if ( arg->nosyst ) disableSystematics();
-  makeAddDelCombinations();
-  if ( arg->nbatchjobs>0 ) writebatchscripts();
+        if ( arg->scalestaterr > -99 ) scaleStatErrors();
+        if ( arg->scaleerr > -99 ) scaleStatAndSystErrors();
+        if ( arg->nosyst ) disableSystematics();
+        makeAddDelCombinations();
+        if ( arg->nbatchjobs>0 ) writebatchscripts();
 	customizeCombinerTitles();
 	setUpPlot();
 	scan(); // most thing gets done here
-  if ( arg->compare ) compareCombinations();
-  if ( arg->info || arg->latex || (arg->save!="" && !arg->saveAtMin) ) return; // if only info is requested then we can go home
+        if ( arg->compare ) compareCombinations();
+        if ( arg->info || arg->latex || (arg->save!="" && !arg->saveAtMin) ) return; // if only info is requested then we can go home
 	if (!arg->isAction("pluginbatch") && !arg->isAction("coveragebatch") && !arg->isAction("coverage") ) savePlot();
 	cout << endl;
 	t.Stop();

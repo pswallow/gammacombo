@@ -72,7 +72,7 @@ void MethodDatasetsProbScan::initScan() {
     }
     if ( !m_xrangeset && arg->scanrangeMin != arg->scanrangeMax ) {
 			setXscanRange(arg->scanrangeMin,arg->scanrangeMax);
-		}
+    }
     // setLimit(w, scanVar1, "scan");
 
     if (hCL) delete hCL;
@@ -264,18 +264,21 @@ void MethodDatasetsProbScan::sethCLFromProbScanTree() {
         this->probScanTree->GetEntry(i);
 
         double deltaChi2 = probScanTree->chi2min - probScanTree->chi2minGlobal;
-				double oneMinusCL = TMath::Prob( deltaChi2, 1);
-				// save the value and corresponding fit result
-				// but only if an improvement
-				if ( hCL->GetBinContent(hCL->FindBin( probScanTree->scanpoint ) ) <= oneMinusCL ) {
-					hCL->SetBinContent( hCL->FindBin( probScanTree->scanpoint ) , oneMinusCL );
-					hChi2min->SetBinContent( hCL->FindBin( probScanTree->scanpoint ), probScanTree->chi2min );
-				}
+        double oneMinusCL = TMath::Prob( deltaChi2, 1);
+        // save the value and corresponding fit result
+        // but only if an improvement
+        if ( hCL->GetBinContent(hCL->FindBin( probScanTree->scanpoint ) ) <= oneMinusCL ) {
+            if (arg->debug) printf("DEBUG::MethodDatasetsProbScan::SethCLFromProbScanTree 1-CL = %d is an improvement over %d for scanpoint %d", oneMinusCL,hCL->GetBinContent(hCL->FindBin( probScanTree->scanpoint ) ), probScanTree->scanpoint); 
+                hCL->SetBinContent( hCL->FindBin( probScanTree->scanpoint ) , oneMinusCL );
+                hChi2min->SetBinContent( hCL->FindBin( probScanTree->scanpoint ), probScanTree->chi2min );
+            if (arg->debug) printf("DEBUG::MethodDatasetsProbScan::SethCLFromProbScanTree  MinChi2 at this point is %d", probScanTree->chi2min);
+        }
         // and whilst we here do the same relative to the background only hypothesis (i.e. for CLs method)
         double deltaChi2Bkg  = probScanTree->chi2min - probScanTree->chi2minBkg;
         //double oneMinusCLBkg = TMath::Prob( deltaChi2Bkg, 1);
         double oneMinusCLBkg = getPValueTTestStatistic( deltaChi2Bkg, true );
         if ( hCLs->GetBinCenter( hCLs->FindBin( probScanTree->scanpoint ) ) <= oneMinusCLBkg ) {
+            if (arg->debug) printf("DEBUG::MethodDatasetsProbScan::SethCLFromProbScanTree 1-C_BG = %d is an improvement over %d for scanpoint %d", oneMinusCLBkg,hCLs->GetBinCenter(hCLs->FindBin( probScanTree->scanpoint ) ), probScanTree->scanpoint); 
             hCLs->SetBinContent( hCLs->FindBin( probScanTree->scanpoint ), oneMinusCLBkg );
         }
     }
@@ -285,15 +288,15 @@ void MethodDatasetsProbScan::sethCLFromProbScanTree() {
       chi2minBkg    = probScanTree->chi2minBkg;
     }
 
-	// put in best fit value
-	hCL->SetBinContent(hCL->FindBin( probScanTree->scanbest ),1.);
-	hChi2min->SetBinContent(hCL->FindBin( probScanTree->scanbest),chi2minGlobal);
+    // put in best fit value
+    hCL->SetBinContent(hCL->FindBin( probScanTree->scanbest ),1.);
+    hChi2min->SetBinContent(hCL->FindBin( probScanTree->scanbest),chi2minGlobal);
     hCLs->SetBinContent(hCLs->FindBin( probScanTree->scanbest ), 1.);
 
-	cout << "Best fit at: scanVar  = " << probScanTree->scanbest << " with Chi2Min: " << chi2minGlobal << endl;
+    cout << "Best fit at: scanVar  = " << probScanTree->scanbest << " with Chi2Min: " << chi2minGlobal << endl;
 
-	sortSolutions();
-	//saveSolutions();
+    sortSolutions();
+    //saveSolutions();
 // this->probScanTree->activateAllBranches(); //< Very important!
 //
 }
@@ -377,13 +380,13 @@ int MethodDatasetsProbScan::scan1d(bool fast, bool reverse)
     float parameterToScan_min = hCL->GetXaxis()->GetXmin();
     float parameterToScan_max = hCL->GetXaxis()->GetXmax();
 
-		// do a free fit
-		RooFitResult *result = this->loadAndFit(this->pdf); // fit on data
-		assert(result);
+    // do a free fit
+    RooFitResult *result = this->loadAndFit(this->pdf); // fit on data
+    assert(result);
     RooSlimFitResult *slimresult = new RooSlimFitResult(result,true);
-		slimresult->setConfirmed(true);
-		solutions.push_back(slimresult);
-		double freeDataFitValue = w->var(scanVar1)->getVal();
+    slimresult->setConfirmed(true);
+    solutions.push_back(slimresult);
+    double freeDataFitValue = w->var(scanVar1)->getVal();
 
     // Define outputfile
     system("mkdir -p root");
@@ -412,7 +415,7 @@ int MethodDatasetsProbScan::scan1d(bool fast, bool reverse)
         // don't add half the bin size. try to solve this within plotting method
 
         float scanpoint = parameterToScan_min + (parameterToScan_max - parameterToScan_min) * (double)i / ((double)nPoints1d - 1);
-				if (arg->debug) cout << "DEBUG in MethodDatasetsProbScan::scan1d_prob() " << scanpoint << " " << parameterToScan_min << " " << parameterToScan_max << endl;
+        if (arg->debug) cout << "DEBUG in MethodDatasetsProbScan::scan1d_prob() " << scanpoint << " " << parameterToScan_min << " " << parameterToScan_max << endl;
 
         this->probScanTree->scanpoint = scanpoint;
 

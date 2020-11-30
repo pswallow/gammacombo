@@ -48,7 +48,7 @@ TGraph* OneMinusClPlot::scan1dPlot(MethodAbsScan* s, bool first, bool last, bool
 	bool plotPoints = ( s->getMethodName()=="Plugin" || s->getMethodName()=="BergerBoos" || s->getMethodName()=="DatasetsPlugin" ) && plotPluginMarkers;
 	TH1F *hCL = (TH1F*)s->getHCL()->Clone(getUniqueRootName());
 	if (CLsType==1) hCL = (TH1F*)s->getHCLs()->Clone(getUniqueRootName());
-  else if (CLsType==2) hCL = (TH1F*)s->getHCLsFreq()->Clone(getUniqueRootName());
+        else if (CLsType==2) hCL = (TH1F*)s->getHCLsFreq()->Clone(getUniqueRootName());
 	// fix inf and nan entries
 	for ( int i=1; i<=s->getHCL()->GetNbinsX(); i++ ){
 		if ( s->getHCL()->GetBinContent(i)!=s->getHCL()->GetBinContent(i)
@@ -147,16 +147,16 @@ TGraph* OneMinusClPlot::scan1dPlot(MethodAbsScan* s, bool first, bool last, bool
 	else{
 		g->SetLineWidth( s->getLineWidth() );
 		g->SetLineStyle( s->getLineStyle() );
-    g->SetLineColor( s->getLineColor() );
-    g->SetFillStyle( s->getFillStyle() );
-    if ( last && arg->isQuickhack(25) ) g->SetLineWidth(3);
+                g->SetLineColor( s->getLineColor() );
+                g->SetFillStyle( s->getFillStyle() );
+                if ( last && arg->isQuickhack(25) ) g->SetLineWidth(3);
 	}
 
 	if (CLsType>0) g->SetLineColor(color);
 
 	if ( plotPoints ){
 		g->SetLineWidth(1);
-    g->SetLineColor(color);
+                g->SetLineColor(color);
 		g->SetMarkerColor(color);
 		g->SetMarkerStyle(8);
 		g->SetMarkerSize(0.6);
@@ -654,107 +654,107 @@ void OneMinusClPlot::drawSolutions()
 	float xmax = gPad->GetUxmax();
 	int iDrawn = 0;
 
-	for ( int i = 0; i < scanners.size(); i++ )
-	{
-		if ( scanners[i]->getDrawSolution()==0 ) continue;
-		if ( arg->debug ) cout << "OneMinusClPlot::drawSolutions() : adding solution for scanner " << i << " ..." << endl;
-		float xCentral = scanners[i]->getScanVar1Solution(arg->plotsoln[i]);
-		float xCLmin = scanners[i]->getCLinterval(arg->plotsoln[i]).min;
-		float xCLmax = scanners[i]->getCLinterval(arg->plotsoln[i]).max;
-		int color = scanners[i]->getTextColor();
+        for ( int i = 0; i < scanners.size(); i++ )
+        {
+            if ( scanners[i]->getDrawSolution()==0 ) continue;
+            if ( arg->debug ) cout << "OneMinusClPlot::drawSolutions() : adding solution for scanner " << i << " ..." << endl;
+            float xCentral = scanners[i]->getScanVar1Solution(arg->plotsoln[i]);
+            float xCLmin = scanners[i]->getCLinterval(arg->plotsoln[i]).min;
+            float xCLmax = scanners[i]->getCLinterval(arg->plotsoln[i]).max;
+            int color = scanners[i]->getTextColor();
 
-		// draw vertical lines at central value and
-		// upper/lower errors
-    if ( ! arg->isQuickhack(19) ) {
-      drawVerticalLine(xCentral, color, kSolid);
-      if ( ! arg->isQuickhack(20) ) {
-        drawVerticalLine(xCLmin, color, kDashed);
-        drawVerticalLine(xCLmax, color, kDashed);
-      }
-    }
+            // draw vertical lines at central value and
+            // upper/lower errors
+            if ( ! arg->isQuickhack(19) ) {
+                drawVerticalLine(xCentral, color, kSolid);
+                if ( ! arg->isQuickhack(20) ) {
+                    drawVerticalLine(xCLmin, color, kDashed);
+                    drawVerticalLine(xCLmax, color, kDashed);
+                }
+            }
 
-		// draw text box with numerical values after the lines,
-		// so that it doesn't get covered
+            // draw text box with numerical values after the lines,
+            // so that it doesn't get covered
 
-		// compute y position of the printed central value
-		float yNumberMin = 0.6 - 0.13*(float)iDrawn;
-		float yNumberMax = yNumberMin+0.1;
-		if ( arg->plotlog ) {
-			float yNumberMinFirst = 0.1;
-			if ( arg->isQuickhack(1) ) yNumberMinFirst = 0.175;
-			yNumberMin = yNumberMinFirst / pow(3.0, iDrawn); // move down by a constant shift on log scale
-			yNumberMax = yNumberMin*2.;
-		}
-    // if printsoly option then move a bit
-    if ( arg->printSolY > 0. ) {
-      yNumberMin += arg->printSolY;
-      yNumberMax += arg->printSolY;
-    }
+            // compute y position of the printed central value
+            float yNumberMin = 0.6 - 0.13*(float)iDrawn;
+            float yNumberMax = yNumberMin+0.1;
+            if ( arg->plotlog ) {
+                float yNumberMinFirst = 0.1;
+                if ( arg->isQuickhack(1) ) yNumberMinFirst = 0.175;
+                yNumberMin = yNumberMinFirst / pow(3.0, iDrawn); // move down by a constant shift on log scale
+                yNumberMax = yNumberMin*2.;
+            }
+            // if printsoly option then move a bit
+            if ( arg->printSolY > 0. ) {
+                yNumberMin += arg->printSolY;
+                yNumberMax += arg->printSolY;
+            }
 
-		// compute x position of the printed central value
-		float xNumberMin, xNumberMax;
-		if ( scanners[i]->getDrawSolution()==1 ) {
-			xNumberMin = xCentral+(xmax-xmin)*0.20; // draw at central value
-			xNumberMax = xCentral+(xmax-xmin)*0.0;
-		}
-		else if ( scanners[i]->getDrawSolution()==2 ) {
-			xNumberMin = xCLmin+(xmax-xmin)*0.0; // draw at left CL boundary
-			xNumberMax = xCLmin+(xmax-xmin)*0.25;
-		}
-		else if ( scanners[i]->getDrawSolution()==3 ) {
-			xNumberMin = xCLmax+(xmax-xmin)*0.0; // draw at right CL boundary
-			xNumberMax = xCLmax+(xmax-xmin)*0.25;
-		}
-		else if ( scanners[i]->getDrawSolution()==4 ) {
-			xNumberMin = xCLmin+(xmax-xmin)*-0.20; // draw a little left of the left CL boundary
-			xNumberMax = xCLmin+(xmax-xmin)*0.0;
-		}
-		else {
-			cout << "OneMinusClPlot::drawSolutions() : ERROR : --ps code ";
-			cout << scanners[i]->getDrawSolution() << " not found! Use [0,1,2,3]." << endl;
-			continue;
-		}
+            // compute x position of the printed central value
+            float xNumberMin, xNumberMax;
+            if ( scanners[i]->getDrawSolution()==1 ) {
+                xNumberMin = xCentral+(xmax-xmin)*0.20; // draw at central value
+                xNumberMax = xCentral+(xmax-xmin)*0.0;
+            }
+            else if ( scanners[i]->getDrawSolution()==2 ) {
+                xNumberMin = xCLmin+(xmax-xmin)*0.0; // draw at left CL boundary
+                xNumberMax = xCLmin+(xmax-xmin)*0.25;
+            }
+            else if ( scanners[i]->getDrawSolution()==3 ) {
+                xNumberMin = xCLmax+(xmax-xmin)*0.0; // draw at right CL boundary
+                xNumberMax = xCLmax+(xmax-xmin)*0.25;
+            }
+            else if ( scanners[i]->getDrawSolution()==4 ) {
+                xNumberMin = xCLmin+(xmax-xmin)*-0.20; // draw a little left of the left CL boundary
+                xNumberMax = xCLmin+(xmax-xmin)*0.0;
+            }
+            else {
+                cout << "OneMinusClPlot::drawSolutions() : ERROR : --ps code ";
+                cout << scanners[i]->getDrawSolution() << " not found! Use [0,1,2,3]." << endl;
+                continue;
+            }
 
-		// move number a bit to the left so it doesn't cover the right plot border anymore
-		if ( arg->isQuickhack(4) )
-		{
-			xNumberMin -= (xmax-xmin)*0.225;
-			xNumberMax -= (xmax-xmin)*0.225;
-		}
+            // move number a bit to the left so it doesn't cover the right plot border anymore
+            if ( arg->isQuickhack(4) )
+            {
+                xNumberMin -= (xmax-xmin)*0.225;
+                xNumberMax -= (xmax-xmin)*0.225;
+            }
 
-    // if print solution argument given then over write
-    if ( arg->printSolX > 0. )
-    {
-      float diff = xNumberMax - xNumberMin;
-      xNumberMin = arg->printSolX;
-      xNumberMax = arg->printSolX + diff;
-    }
+            // if print solution argument given then over write
+            if ( arg->printSolX > 0. )
+            {
+                float diff = xNumberMax - xNumberMin;
+                xNumberMin = arg->printSolX;
+                xNumberMax = arg->printSolX + diff;
+            }
 
-		TPaveText *t1 = new TPaveText(xNumberMin, yNumberMin, xNumberMax, yNumberMax, "BR");
-		t1->SetBorderSize(0);
-		t1->SetFillStyle(0);
-		t1->SetTextAlign(13);
-		t1->SetTextFont(font);
-		t1->SetTextColor(color);
-    t1->SetTextSize(labelsize);
-    if ( arg->isQuickhack(32) ) t1->SetTextSize(1.5*labelsize);
-		if ( isAngle(scanners[i]->getScanVar1()) ){
-			xCentral = RadToDeg(xCentral);
-			xCLmin = RadToDeg(xCLmin);
-			xCLmax = RadToDeg(xCLmax);
-		}
-		Rounder myRounder(arg, xCLmin, xCLmax, xCentral);
-		int d = myRounder.getNsubdigits();
-		float xCentralRd = myRounder.central();
-		if ( arg->isQuickhack(3) ) xCentralRd += 180.; ///< see documentation of --qh option in OptParser.cpp
-		t1->AddText(Form("%.*f^{+%.*f}_{#font[122]{-}%.*f}",
-					d, xCentralRd,
-					d, myRounder.errPos(),
-					d, myRounder.errNeg()));
+            TPaveText *t1 = new TPaveText(xNumberMin, yNumberMin, xNumberMax, yNumberMax, "BR");
+            t1->SetBorderSize(0);
+            t1->SetFillStyle(0);
+            t1->SetTextAlign(13);
+            t1->SetTextFont(font);
+            t1->SetTextColor(color);
+            t1->SetTextSize(labelsize);
+            if ( arg->isQuickhack(32) ) t1->SetTextSize(1.5*labelsize);
+            if ( isAngle(scanners[i]->getScanVar1()) ){
+                xCentral = RadToDeg(xCentral);
+                xCLmin = RadToDeg(xCLmin);
+                xCLmax = RadToDeg(xCLmax);
+            }
+            Rounder myRounder(arg, xCLmin, xCLmax, xCentral);
+            int d = myRounder.getNsubdigits();
+            float xCentralRd = myRounder.central();
+            if ( arg->isQuickhack(3) ) xCentralRd += 180.; ///< see documentation of --qh option in OptParser.cpp
+            t1->AddText(Form("%.*f^{+%.*f}_{#font[122]{-}%.*f}",
+                        d, xCentralRd,
+                        d, myRounder.errPos(),
+                        d, myRounder.errNeg()));
 
-    if ( !arg->isQuickhack(21) ) t1->Draw();
-		iDrawn += 1;
-	}
+            if ( !arg->isQuickhack(21) ) t1->Draw();
+            iDrawn += 1;
+        }
 }
 
 ///
@@ -846,117 +846,119 @@ void OneMinusClPlot::drawCLguideLines()
 
 void OneMinusClPlot::Draw()
 {
-  bool plotSimple = false;//arg->debug; ///< set to true to use a simpler plot function
+    bool plotSimple = false;//arg->debug; ///< set to true to use a simpler plot function
 	///< which directly plots the 1-CL histograms without beautification
 
-  if ( m_mainCanvas==0 ){
-		m_mainCanvas = newNoWarnTCanvas(name+getUniqueRootName(), title, 800, 600);
-    // put this in for exponent xaxes
-    if ( !arg->isQuickhack(30) ) m_mainCanvas->SetRightMargin(0.1);
-	}
-	if ( arg->plotlog ){
-		m_mainCanvas->SetLogy();
-		if ( !this->name.EndsWith("_log") ) this->name = this->name + "_log";
-	}
-	m_mainCanvas->cd();
+    if ( m_mainCanvas==0 ){
+        m_mainCanvas = newNoWarnTCanvas(name+getUniqueRootName(), title, 800, 600);
+        // put this in for exponent xaxes
+        if ( !arg->isQuickhack(30) ) m_mainCanvas->SetRightMargin(0.1);
+    }
+
+    if ( arg->plotlog ){
+            m_mainCanvas->SetLogy();
+            if ( !this->name.EndsWith("_log") ) this->name = this->name + "_log";
+    }
+    m_mainCanvas->cd();
 
   // plot the CLs
-  for ( int i = 0; i < scanners.size(); i++ ) if (do_CLs[i]==2) scan1dCLsPlot(scanners[i],arg->nsmooth);
+    for ( int i = 0; i < scanners.size(); i++ ){
+        if (do_CLs[i]==2){
+            scan1dCLsPlot(scanners[i],arg->nsmooth);
+        }
+    }
 
-	// Legend:
-	// make the legend short, the text will extend over the boundary, but the symbol will be shorter
-  float legendXmin = arg->plotlegx!=-1. ? arg->plotlegx : 0.19 ;
-  float legendYmin = arg->plotlegy!=-1. ? arg->plotlegy : 0.78 ;
-  float legendXmax = legendXmin + ( arg->plotlegsizex!=-1. ? arg->plotlegsizex : 0.31 ) ;
-  float legendYmax = legendYmin + ( arg->plotlegsizey!=-1. ? arg->plotlegsizey : 0.1640559 ) ;
-	TLegend* leg = new TLegend(legendXmin,legendYmin,legendXmax,legendYmax);
-  leg->Clear();
-  leg->SetNColumns( arg->plotlegcols );
-	leg->SetFillColorAlpha(kWhite,1.);
-  leg->SetFillStyle(0);
-	leg->SetLineColor(kWhite);
-	leg->SetBorderSize(0);
-	leg->SetTextFont(font);
-	leg->SetTextSize(legendsize*0.75);
-  vector<TString> legTitles;
+    // Legend:
+    // make the legend short, the text will extend over the boundary, but the symbol will be shorter
+    float legendXmin = arg->plotlegx!=-1. ? arg->plotlegx : 0.19 ;
+    float legendYmin = arg->plotlegy!=-1. ? arg->plotlegy : 0.78 ;
+    float legendXmax = legendXmin + ( arg->plotlegsizex!=-1. ? arg->plotlegsizex : 0.31 ) ;
+    float legendYmax = legendYmin + ( arg->plotlegsizey!=-1. ? arg->plotlegsizey : 0.1640559 ) ;
+    TLegend* leg = new TLegend(legendXmin,legendYmin,legendXmax,legendYmax);
+    leg->Clear();
+    leg->SetNColumns( arg->plotlegcols );
+    leg->SetFillColorAlpha(kWhite,1.);
+    leg->SetFillStyle(0);
+    leg->SetLineColor(kWhite);
+    leg->SetBorderSize(0);
+    leg->SetTextFont(font);
+    leg->SetTextSize(legendsize*0.75);
+    vector<TString> legTitles;
 
-	for ( int i = 0; i < scanners.size(); i++ )
-	{
-		TString legDrawOption = "f";
-		if ( plotPluginMarkers
-        && ( scanners[i]->getMethodName()=="Plugin"
-          || scanners[i]->getMethodName()=="BergerBoos"
-          || scanners[i]->getMethodName()=="DatasetsPlugin" ) )
+    for ( int i = 0; i < scanners.size(); i++ )
     {
-      legDrawOption = "lep";
+        TString legDrawOption = "f";
+        if ( plotPluginMarkers && ( scanners[i]->getMethodName()=="Plugin" || scanners[i]->getMethodName()=="BergerBoos"|| scanners[i]->getMethodName()=="DatasetsPlugin" ) )
+        {
+            legDrawOption = "lep";
+        }
+        if ( arg->plotlegstyle != "default" ) legDrawOption = arg->plotlegstyle;
+
+        TString legTitle = scanners[i]->getTitle();
+        if ( legTitle=="default" ) {
+            if ( scanners[i]->getMethodName().Contains("Prob") ) legTitle = do_CLs[i] ? "Prob CLs" : "Prob";
+            if ( scanners[i]->getMethodName().Contains("Plugin") ) {
+                if ( do_CLs[i]==0 ) legTitle    = "Plugin";
+                else if (do_CLs[i]==1) legTitle = "Simplified CLs";
+                else if (do_CLs[i]==2) legTitle = "Standard CLs";
+            }
+        }
+        else if ( !arg->isQuickhack(29) ) {
+            if ( scanners[i]->getMethodName().Contains("Prob") ) legTitle += do_CLs[i] ? " (Prob CLs)" : " (Prob)";
+            if ( scanners[i]->getMethodName().Contains("Plugin") ) {
+                if ( do_CLs[i]==0 )    legTitle += " (Plugin)";
+                else if (do_CLs[i]==1) legTitle += " (Simplified CLs)";
+                else if (do_CLs[i]==2) legTitle += " (Standard CLs)";
+            }
+        }
+        legTitles.push_back(legTitle);
+
+        if ( plotSimple )
+        {
+            scan1dPlotSimple(scanners[i], i==0, do_CLs[i]);
+            if(do_CLs[i]) 	leg->AddEntry(scanners[i]->getHCL(), legTitle, legDrawOption);
+            else 		leg->AddEntry(scanners[i]->getHCL(), legTitle, legDrawOption);
+        }
+        else
+        {
+            if ( scanners[i]->getFillStyle()!=0 || scanners[i]->getFillColor()!=0 ) {
+                TGraph* g = scan1dPlot(scanners[i], i==0, false, scanners[i]->getFilled(), do_CLs[i]);
+                if ( legTitles[i]!="noleg" ) leg->AddEntry(g, legTitle, legDrawOption);
+            }
+        }
     }
-    if ( arg->plotlegstyle != "default" ) legDrawOption = arg->plotlegstyle;
 
-    TString legTitle = scanners[i]->getTitle();
-    if ( legTitle=="default" ) {
-      if ( scanners[i]->getMethodName().Contains("Prob") ) legTitle = do_CLs[i] ? "Prob CLs" : "Prob";
-      if ( scanners[i]->getMethodName().Contains("Plugin") ) {
-        if ( do_CLs[i]==0 ) legTitle    = "Plugin";
-        else if (do_CLs[i]==1) legTitle = "Simplified CLs";
-        else if (do_CLs[i]==2) legTitle = "Standard CLs";
-      }
+    // lines only
+    if ( !plotSimple )
+        for ( int i = 0; i < scanners.size(); i++ )
+        {
+            bool last = i==scanners.size()-1;
+            TGraph *g = scan1dPlot(scanners[i], false, last, false, do_CLs[i]);
+            if ( scanners[i]->getFillStyle()==0 && scanners[i]->getFillColor()==0 ) {
+                if ( legTitles[i]!="noleg" ) leg->AddEntry(g, legTitles[i], "L");
+            }
+        }
+    drawSolutions();
+    if ( plotLegend ) leg->Draw();
+    if ( arg->isQuickhack(22) ) leg->Draw();
+    m_mainCanvas->Update();
+    if ( !arg->isQuickhack(34) ) drawCLguideLines();
+
+    // draw the logo
+    float yGroup = 0.6;
+    if ( plotLegend ){
+        // we have a legend
+        if ( arg->plotlog )   yGroup = 0.775;
+        else                  yGroup = 0.60;
     }
-    else if ( !arg->isQuickhack(29) ) {
-      if ( scanners[i]->getMethodName().Contains("Prob") ) legTitle += do_CLs[i] ? " (Prob CLs)" : " (Prob)";
-      if ( scanners[i]->getMethodName().Contains("Plugin") ) {
-        if ( do_CLs[i]==0 )    legTitle += " (Plugin)";
-        else if (do_CLs[i]==1) legTitle += " (Simplified CLs)";
-        else if (do_CLs[i]==2) legTitle += " (Standard CLs)";
-      }
+    else{
+        // no legend
+        if ( arg->plotlog )   yGroup = 0.3;
+        else                  yGroup = 0.775;
     }
-    legTitles.push_back(legTitle);
+    drawGroup(yGroup);
 
-		if ( plotSimple )
-		{
-			scan1dPlotSimple(scanners[i], i==0, do_CLs[i]);
-			if(do_CLs[i]) 	leg->AddEntry(scanners[i]->getHCL(), legTitle, legDrawOption);
-			else 			leg->AddEntry(scanners[i]->getHCL(), legTitle, legDrawOption);
-		}
-		else
-		{
-      if ( scanners[i]->getFillStyle()!=0 || scanners[i]->getFillColor()!=0 ) {
-        TGraph* g = scan1dPlot(scanners[i], i==0, false, scanners[i]->getFilled(), do_CLs[i]);
-        if ( legTitles[i]!="noleg" ) leg->AddEntry(g, legTitle, legDrawOption);
-       }
-		}
-	}
-  
-	// lines only
-	if ( !plotSimple )
-	for ( int i = 0; i < scanners.size(); i++ )
-		{
-			bool last = i==scanners.size()-1;
-			TGraph *g = scan1dPlot(scanners[i], false, last, false, do_CLs[i]);
-      if ( scanners[i]->getFillStyle()==0 && scanners[i]->getFillColor()==0 ) {
-        if ( legTitles[i]!="noleg" ) leg->AddEntry(g, legTitles[i], "L");
-      }
-		}
-	drawSolutions();
-	if ( plotLegend ) leg->Draw();
-  if ( arg->isQuickhack(22) ) leg->Draw();
-	m_mainCanvas->Update();
-	if ( !arg->isQuickhack(34) ) drawCLguideLines();
-
-	// draw the logo
-	float yGroup = 0.6;
-	if ( plotLegend ){
-		// we have a legend
-		if ( arg->plotlog )   yGroup = 0.775;
-		else                  yGroup = 0.60;
-	}
-	else{
-		// no legend
-		if ( arg->plotlog )   yGroup = 0.3;
-		else                  yGroup = 0.775;
-	}
-	drawGroup(yGroup);
-
-	m_mainCanvas->Update();
-	m_mainCanvas->Show();
+    m_mainCanvas->Update();
+    m_mainCanvas->Show();
 
 }
