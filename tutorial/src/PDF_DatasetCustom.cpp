@@ -20,8 +20,7 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
         exit(EXIT_FAILURE);
     }
 
-    RooWorkspace* w = this->getWorkspace();
-    RooRealVar* m_var = w->var(massVarName.c_str());
+    RooRealVar* m_var = getWorkspace()->var(massVarName.c_str());
     m_var->setRange("full", 4720, 6520);
     m_var->setRange("lsb", 4720, 5000);
     m_var->setRange("rsb", 5800, 6520);
@@ -33,7 +32,22 @@ RooFitResult* PDF_DatasetCustom::fit(RooDataSet* dataToFit) {
     // Choose Dataset to fit to
     // unfortunately Minuit2 does not initialize the status of the roofitresult, if all parameters are constant. Therefore need to stay with standard Minuit fitting.
     // RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Minimizer("Minuit2", "Migrad"));
-    RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Extended(kTRUE));
+    
+    bool blind = true;
+    
+    if(blind==true){
+        dataToFit = (RooDataSet*)dataToFit->reduce(CutRange("lsb,rsb"));
+    }
+
+    RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save()
+                                      //,RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName))
+                                      //,RooFit::Extended(kTRUE) //Addition over tutorial
+                                      //,RooFit::Minos(kFALSE)
+                                      //,RooFit::Hesse(kFALSE)
+                                      //,RooFit::Strategy(3)
+                                      //,RooFit::Minimizer("Minuit2","minimize")
+                                      ,RooFit::Range("lsb,rsb")
+                                      );
 
     if(sanity){
         plotting((plotDir+"SignalBGFit").c_str(), dataToFit, counterSB, 0);
@@ -81,6 +95,11 @@ RooFitResult* PDF_DatasetCustom::fitBkg(RooDataSet* dataToFit) {
     getWorkspace()->var("BFsig")->setVal(0.0);
     getWorkspace()->var("BFsig")->setConstant(true);
 
+    RooRealVar* m_var = getWorkspace()->var(massVarName.c_str());
+    m_var->setRange("full", 4720, 6520);
+    m_var->setRange("lsb", 4720, 5000);
+    m_var->setRange("rsb", 5800, 6520);
+
     // Turn off RooMsg
     RooMsgService::instance().setGlobalKillBelow(ERROR);
     RooMsgService::instance().setSilentMode(kTRUE);
@@ -88,8 +107,18 @@ RooFitResult* PDF_DatasetCustom::fitBkg(RooDataSet* dataToFit) {
 
     // unfortunately Minuit2 does not initialize the status of the roofitresult, if all parameters are constant. Therefore need to stay with standard Minuit fitting.
     // RooFitResult* result  = pdfBkg->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Minimizer("Minuit2", "Migrad"));
+    
+    bool blind = true;
+    
+    if(blind==true){
+        std::cout << "===Anteater==="<<std::endl;
+        dataToFit = (RooDataSet*)dataToFit->reduce(CutRange("lsb,rsb"));
+    }
 
-    RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Extended(kTRUE));
+    RooFitResult* result  = pdf->fitTo( *dataToFit, RooFit::Save() 
+                                        //,RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName))
+                                        //,RooFit::Extended(kTRUE)
+                                        ,RooFit::Range("lsb,rsb"));
     // RooFitResult* result  = pdfBkg->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Extended(kTRUE));
     RooMsgService::instance().setSilentMode(kFALSE);
     RooMsgService::instance().setGlobalKillBelow(INFO);
@@ -139,14 +168,13 @@ void PDF_DatasetCustom::generateBkgToys(int SeedShift) {
     initializeRandomGenerator(SeedShift);
 
     if(isBkgPdfSet){
-        std::string massVarname="Lb_DTFLambdaPV_M";
         double parvalue = getWorkspace()->var("BFsig")->getVal();
         bool isconst = getWorkspace()->var("BFsig")->isConstant();
         getWorkspace()->var("BFsig")->setVal(0.0);
         getWorkspace()->var("BFsig")->setConstant(true);
         // RooDataSet* toys = pdfBkg->generate(*observables, RooFit::NumEvents(wspc->data(dataName)->numEntries()), RooFit::Extended(kTRUE));
         //RooDataSet* toys = pdf->generate(*observables, RooFit::NumEvents(wspc->data(dataName)->numEntries()), RooFit::Extended(kTRUE));
-        RooDataSet* toys = pdf->generate(RooArgSet(*observables), wspc->data(dataName)->numEntries(), kFALSE, kTRUE, "", kFALSE, kTRUE);
+        RooDataSet* toys = this->pdf->generate(RooArgSet(*observables), wspc->data(dataName)->numEntries(), kFALSE, kTRUE, "", kFALSE, kTRUE);
 	//RooDataSet* toys = pdf->generate(RooArgSet(wspc->var(massVarname.c_str()), wspc->cat("category")),0,kFALSE,kTRUE,"",kFALSE,kTRUE)
     
         if(sanity){
@@ -164,7 +192,6 @@ void PDF_DatasetCustom::generateBkgToys(int SeedShift) {
         exit(EXIT_FAILURE);
     }
 };
-
 
 void PDF_DatasetCustom::plotting(std::string plotString, RooDataSet* data, int count, bool isToy){
     RooWorkspace* w = this->getWorkspace();
@@ -184,7 +211,7 @@ void PDF_DatasetCustom::plotting(std::string plotString, RooDataSet* data, int c
             data->plotOn(frame,RooFit::Cut(cutting.c_str()));
             //pdf->plotOn(frame);
             RooCategory* slicedCategory = w->cat("category");
-            pdf->plotOn(frame,RooFit::Slice(*slicedCategory,cat.c_str()), RooFit::ProjWData(*data), RooFit::NormRange("lsb,rsb"));
+            pdf->plotOn(frame,RooFit::Slice(*slicedCategory, cat.c_str()), RooFit::ProjWData(*data), RooFit::NormRange("lsb,rsb"));
 
             frame->Draw();
             std::string plotOutput = plotString+"_"+to_string(count)+"_"+cat+".pdf";

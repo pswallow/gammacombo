@@ -1563,7 +1563,11 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
                       << "#### > free min nll: " << toyTree.chi2minGlobalToy << " vs pdf: " << toyTree.chi2minGlobalToyPDF << endl
                       << "#### > scan min nll: " << toyTree.chi2minToy << " vs pdf: " << toyTree.chi2minToyPDF << endl
                       << "#### > dChi2 fitresult: " << toyTree.chi2minToy - toyTree.chi2minGlobalToy << endl
-                      << "#### > dChi2 pdfresult: " << toyTree.chi2minToyPDF - toyTree.chi2minGlobalToyPDF << endl;
+                      << "#### > dChi2 pdfresult: " << toyTree.chi2minToyPDF - toyTree.chi2minGlobalToyPDF << endl
+                      << "#### > min Chi2 Fit Toy: " << toyTree.chi2minToy << endl
+                      << "#### > min Chi2 Fit Global Toy: " << toyTree.chi2minGlobalToy << endl
+                      << "#### > min Chi2 PDF Toy: " << toyTree.chi2minToyPDF << endl
+                      << "#### > min Chi2 PDF Global Toy: " << toyTree.chi2minGlobalToyPDF << endl;
                 cout  << std::setprecision(6);
 
                 if (toyTree.chi2minToy - toyTree.chi2minGlobalToy > 20 && (toyTree.statusFree == 0 && toyTree.statusScan == 0)

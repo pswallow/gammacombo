@@ -552,11 +552,13 @@ bool MethodAbsScan::interpolate(TH1F* h, int i, float y, float central, bool upp
 	g->SetPoint(0, h->GetBinCenter(i-1), h->GetBinContent(i-1));
 	g->SetPoint(1, h->GetBinCenter(i),   h->GetBinContent(i));
 	g->SetPoint(2, h->GetBinCenter(i+1), h->GetBinContent(i+1));
+        std::cout << "DEBUG: " << h->GetBinCenter(i-1) << " " << h->GetBinCenter(i) << " " << h->GetBinCenter(i+1) <<std::endl;
 
 	// see if we can add a 4th and 5th point
 	if ( (h->GetBinContent(i-2) < h->GetBinContent(i-1) && h->GetBinContent(i-1) < h->GetBinContent(i))
 			|| (h->GetBinContent(i-2) > h->GetBinContent(i-1) && h->GetBinContent(i-1) > h->GetBinContent(i)) )
 	{
+                std::cout << "DEBUG: Adding 4th and 5th point" <<std::endl;
 		// add to the beginning
 		TGraph *gNew = new TGraph(g->GetN()+1);
 		gNew->SetPoint(0, h->GetBinCenter(i-2), h->GetBinContent(i-2));
@@ -573,27 +575,56 @@ bool MethodAbsScan::interpolate(TH1F* h, int i, float y, float central, bool upp
 	if ( (h->GetBinContent(i+2) < h->GetBinContent(i+1) && h->GetBinContent(i+1) < h->GetBinContent(i))
 			|| (h->GetBinContent(i+2) > h->GetBinContent(i+1) && h->GetBinContent(i+1) > h->GetBinContent(i)) )
 	{
+                std::cout << "DEBUG: Adding to end" <<std::endl;
 		// add to the end
 		g->Set(g->GetN()+1);
 		g->SetPoint(g->GetN()-1, h->GetBinCenter(i+2), h->GetBinContent(i+2));
 	}
 
+
+        
 	// debug: show fitted 1-CL histogram
-	// if ( y>0.1 )
-	// if ( methodName == TString("Plugin") && y<0.1 )
-	// {
-	//   TString debugTitle = methodName + Form(" y=%.2f ",y);
-	//   debugTitle += upper?Form("%f upper",central):Form("%f lower",central);
-	//   TCanvas *c = newNoWarnTCanvas(getUniqueRootName(), debugTitle);
-	//   g->SetMarkerStyle(3);
-	//   g->SetHistogram(h);
-	//   h->Draw();
-	//   g->Draw("p");
-	// }
+        /*
+	 if ( y>0.1 )
+	 if ( methodName == TString("Plugin") && y<0.1 )
+	 {
+	   TString debugTitle = methodName + Form(" y=%.2f ",y);
+	   debugTitle += upper?Form("%f upper",central):Form("%f lower",central);
+	   TCanvas *c = newNoWarnTCanvas(getUniqueRootName(), debugTitle);
+	   g->SetMarkerStyle(3);
+	   g->SetHistogram(h);
+	   h->Draw();
+	   g->Draw("p");
+	 }
+         */
+
 
 	TF1 *f1 = new TF1("f1", "pol2", h->GetBinCenter(i-2), h->GetBinCenter(i+2));
-	g->Fit("f1", "q");    // fit linear to get decent start parameters
-	g->Fit("f1", "qf+");  // refit with minuit to get more correct errors (TGraph fit errors bug)
+        std::cout << "===============Aadvark===============" <<std::endl;
+        std::cout << "Before fitting in interpolate" <<std::endl;
+	//g->Fit("f1", "q");    // fit linear to get decent start parameters
+	g->Fit("f1", "");    // fit linear to get decent start parameters
+
+        TCanvas *canTest = new TCanvas("Cantest","Cantest",500,500);
+        g->Draw();
+        f1->Draw("SAME");
+        canTest->SaveAs("/afs/cern.ch/work/p/pswallow/private/Lb2LemuAna/gammacombo/tutorial/plots/pdf/FitDEBUG1.pdf");
+        delete canTest;
+
+        std::cout << "After fitting f1 in interpolate" <<std::endl;
+	//g->Fit("f1", "qf+");  // refit with minuit to get more correct errors (TGraph fit errors bug)
+	g->Fit("f1", "f+");  // refit with minuit to get more correct errors (TGraph fit errors bug)
+
+        TCanvas *canTest2 = new TCanvas("Cantest2","Cantest2",500,500);
+        g->Draw();
+        f1->Draw("SAME");
+        canTest2->SaveAs("/afs/cern.ch/work/p/pswallow/private/Lb2LemuAna/gammacombo/tutorial/plots/pdf/FitDEBUG2.pdf");
+        delete canTest2;
+
+        std::cout << "After fitting f1 qf+ in interpolate" <<std::endl;
+        std::cout << "===============Aadvark===============" <<std::endl;
+
+
 	float p[3], e[3];
 	for ( int ii=0; ii<3; ii++ )
 	{

@@ -65,7 +65,10 @@ int main(int argc, char* argv[])
   std::string fit_string = "data_fit_result_"+category;
   std::string workspace_location = std::getenv("LB2LEMUROOT")+std::string("/gammacombo/tutorial/Workspaces/");
   //std::string workspace_name = "Lb2Lemu_wsOld_WithPDFs.root";
-  std::string workspace_name = "Lb2Lemu_wsOld_gammaCombo2.root";
+  //std::string workspace_name = "Lb2Lemu_wsOld_gammaCombo2.root";
+  std::string workspace_name = "Lb2Lemu_wsOld_GC3.root";
+
+  std::cout << "Using workspace: " << (workspace_location+workspace_name).c_str() <<std::endl;
 
   // Load the workspace from its file
   //TFile f("workspace.root");
@@ -81,7 +84,7 @@ int main(int argc, char* argv[])
 	  std::cout<<"You can create the workspace by calling the tutorial_dataset_build_workspace command. "<<std::endl;
 	  std::cout<<"The corresponding code can be found in tutorial_dataset_build_workspace.cpp"<<std::endl;
   }
-  workspace->Print();
+  //workspace->Print();
 
   workspace->var("BFsig")->setVal(1e-8);
   workspace->var("BFsig")->setRange(0,140e-9);
@@ -140,13 +143,9 @@ int main(int argc, char* argv[])
       auto val = workspace->var(("Nbkg_"+cat).c_str())->getVal();
       workspace->var(("Nbkg_"+cat).c_str())->setMin(0.5*val);
       workspace->var(("Nbkg_"+cat).c_str())->setMax(1.5*val);
-      //workspace->var(("Nbkg_"+cat).c_str())->setMin(0.05*val);
-      //workspace->var(("Nbkg_"+cat).c_str())->setMax(20*val);
       val = workspace->var(("tau_a_"+cat).c_str())->getVal();
       workspace->var(("tau_a_"+cat).c_str())->setMin(1.5*val);
       workspace->var(("tau_a_"+cat).c_str())->setMax(0.5*val);
-      //workspace->var(("tau_a_"+cat).c_str())->setMin(20*val);
-      //workspace->var(("tau_a_"+cat).c_str())->setMax(0.05*val);
   }
 
   //std::cout << ((RooFitResult*)workspace->obj("data_fit_result"))->floatParsFinal() <<std::endl;

@@ -481,16 +481,12 @@ void Utils::randomizeParametersUniform(RooWorkspace* w, TString setname, RooSlim
 /// in the fit result
 ///
 void Utils::setParameters(RooWorkspace* w, RooFitResult* values){
-        std::cout << "Aadvark1" <<std::endl;
 	RooArgList list = values->floatParsFinal();
-        std::cout << "Aadvark2" <<std::endl;
 	list.add(values->constPars());
-        std::cout << "Aadvark3" <<std::endl;
 	TIterator* it = list.createIterator();
-        std::cout << "Aadvark4" <<std::endl;
 	while(RooRealVar* p = (RooRealVar*)it->Next()){
 		RooRealVar* var = dynamic_cast<RooRealVar*>(w->allVars().find(p->GetName()));
-                std::cout << "Aadvark5 " << p->GetName() <<std::endl;
+                //std::cout << "Aadvark5 " << p->GetName() <<std::endl;
 		if(!(var)){
 			std::cout <<  "WARNING in Utils::setParameters(RooWorkspace,RooFitResult) -- no Var found with name "
 				<< p->GetName() << " in Workspace!" << endl;
@@ -499,7 +495,6 @@ void Utils::setParameters(RooWorkspace* w, RooFitResult* values){
 			var->setVal(p->getVal());
 		}
 	}
-        std::cout << "Aadvark6" <<std::endl;
 	return;
 };
 
