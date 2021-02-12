@@ -506,7 +506,7 @@ void Utils::setParameters(const RooAbsCollection* setMe, const RooAbsCollection*
 	TIterator* it = setMe->createIterator();
 	while ( RooRealVar* p = (RooRealVar*)it->Next() ){
 		RooRealVar *var = (RooRealVar*)values->find(p->GetName());
-		if ( var ) p->setVal(var->getVal());
+		if ( var ){ p->setVal(var->getVal()); }
 	}
 	delete it;
 }

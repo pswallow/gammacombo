@@ -482,6 +482,7 @@ void MethodDatasetsPluginScan::readScan1dTrees(int runMin, int runMax, TString f
         // apply cuts
         if ( tooHighLikelihood || !convergedFits )
         {
+            if(arg->debug) std::cout << "Failed because of "  << t.statusFree << t.statusScan << t.covQualFree << t.covQualScan << tooHighLikelihood << std::endl;
             h_failed->Fill(t.scanpoint);
             if (t.scanpoint == 0) n0failed++;
             valid = false;
@@ -490,7 +491,7 @@ void MethodDatasetsPluginScan::readScan1dTrees(int runMin, int runMax, TString f
         }
 
         if ( BadBkgFit){
-            // std::cout << "Failed because of "  << t.statusFreeBkg << t.statusBkgBkg << t.covQualFreeBkg << t.covQualBkgBkg << std::endl;
+            if(arg->debug) std::cout << "Failed because of "  << t.statusFreeBkg << t.statusBkgBkg << t.covQualFreeBkg << t.covQualBkgBkg << std::endl;
             nfailedbkg++;
         }
 
@@ -780,6 +781,7 @@ void MethodDatasetsPluginScan::readScan1dTrees(int runMin, int runMax, TString f
         if (arg->debug) {
           cout << "At scanpoint " << std::scientific << hCL->GetBinCenter(i) << ": ===== number of toys for pValue calculation: " << nbetter << endl;
           cout << "At scanpoint " << hCL->GetBinCenter(i) << ": ===== pValue:         " << p << endl;
+          cout << "At scanpoint " << std::scientific << hCL->GetBinCenter(i) << ": ===== number of toys for pValueCLs calculation: " << nbetter_cls << endl;
           cout << "At scanpoint " << hCL->GetBinCenter(i) << ": ===== pValue CLs:     " << p_cls << endl;
           cout << "At scanpoint " << hCL->GetBinCenter(i) << ": ===== pValue CLsFreq: " << hCLsFreq->GetBinContent(i) << endl;
         }
@@ -890,6 +892,9 @@ double MethodDatasetsPluginScan::getPValueTTestStatistic(double test_statistic_v
 ///
 int MethodDatasetsPluginScan::scan1d(int nRun)
 {
+      //Paul:: Addition by me
+      this->pdf->jobID = nRun;
+      ///////////////////////
 
     // //current working directory
     // boost::filesystem::path full_path( boost::filesystem::initial_path<boost::filesystem::path>() );
@@ -954,6 +959,12 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
     }
     for ( int j = 0; j < nActualToys; j++ ) {
         // std::cout << "Toy " << j << std::endl;
+      
+      //Paul:: Addition by me
+      pdf->nToy = j;
+      pdf->jobType = "global";
+      ///////////////////////
+
       if(pdf->getBkgPdf()){
         Utils::setParameters(w,dataBkgFitResult); //set parameters to bkg fit so the generation always starts at the same value
         // pdf->printParameters();
@@ -1052,6 +1063,7 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
             }
         }
 
+        pdf->jobType = "BGonly";
         // fit the bkg-only toys with the bkg-only hypothesis
         delete rb;
         rb = pdf->fitBkg(bkgOnlyToy);
@@ -1098,7 +1110,11 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
     ProgressBar progressBar(arg, nPoints1d);
     for ( int i = 0; i < nPoints1d; i++ )
     {
-
+        
+        //Paul:: Addition by me
+        this->pdf->scanPoint = i;
+        ///////////////////////
+      
 				toyTree.npoint = i;
 
 				progressBar.progress();
@@ -1159,6 +1175,9 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
             this->pdf->setMinNllScan(0);
 
 						toyTree.ntoy = j;
+            //Paul:: Addition by me
+            this->pdf->nToy = j;
+            ///////////////////////
 
             // 1. Generate toys
 
@@ -1174,6 +1193,7 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
             // 2. Fit to toys with parameter of interest fixed to scanpoint
             //
             if (arg->debug)cout << "DEBUG in MethodDatasetsPluginScan::scan1d_plugin() - perform scan toy fit" << endl;
+            pdf->jobType = "scanning";
 
             // set parameters to constrained data scan fit result again
             this->setParevolPointByIndex(i);
@@ -1230,6 +1250,7 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
             // 2.5 Fit to bkg only toys with parameter of interest fixed to scanpoint
             //
             if (arg->debug)cout << "DEBUG in MethodDatasetsPluginScan::scan1d_plugin() - perform scan toy fit to background" << endl;
+            pdf->jobType = "scanningBG";
 
             // set parameters to constrained data scan fit result again
             this->setParevolPointByIndex(i);
@@ -1289,6 +1310,7 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
             // 3. Fit to toys with free parameter of interest
             //
             if (arg->debug)cout << "DEBUG in MethodDatasetsPluginScan::scan1d_plugin() - perform free toy fit" << endl;
+            this->pdf->jobType = "free";
             // Use parameters from the scanfit to data
 
             this->setParevolPointByIndex(i);
@@ -1296,7 +1318,7 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
             // free parameter of interest
             parameterToScan->setConstant(false);
             //setLimit(w, scanVar1, "free");
-            w->var(scanVar1)->removeRange();
+            w->var(scanVar1)->removeRange(); 
 
 			// set dataset back
 			if (arg->debug) cout << "Setting toy back as data " << tempData << endl;
@@ -1389,7 +1411,7 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
                             parameterToScan->setVal(static_cast<RooRealVar*>(r1->floatParsFinal().find(parameterToScan->GetName()))->getVal());
                             delete r_tmp;
                         }
-                        delete parsAfterScanFit;
+                        //delete parsAfterScanFit;
                     };
                     if (arg->debug) {
                         cout  << "===== > compare free fit result with pdf parameters: " << endl;
@@ -1506,7 +1528,7 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
                             parameterToScan->setVal(static_cast<RooRealVar*>(r1->floatParsFinal().find(parameterToScan->GetName()))->getVal());
                             delete r_tmp;
                         }
-                        delete parsAfterScanFit;
+                        //delete parsAfterScanFit;
                     };
                     if (arg->debug) {
                         cout  << "===== > compare free fit result with pdf parameters: " << endl;
@@ -1595,7 +1617,9 @@ int MethodDatasetsPluginScan::scan1d(int nRun)
             delete r;
             delete r1;
             delete rb;
+            delete parsAfterScanFit;
             pdf->deleteToys();
+            pdf->jobType = "";
         } // End of toys loop
 
         // reset
@@ -1827,9 +1851,13 @@ void MethodDatasetsPluginScan::setAndPrintFitStatusConstrainedToys(const ToyTree
 
     if ( (pdf->getFitStatus() != 0 || negTestStat ) && arg->debug ) {
         cout  << "----> problem in current fit: going to refit with strategy " << pdf->getFitStrategy() << " , summary: " << endl
-              << "----> NLL value: " << std::setprecision(9) << pdf->getMinNllFree() << endl
+              << "----> NLL value(free): " << std::setprecision(9) << pdf->getMinNllFree() << endl
               << "----> fit status: " << pdf->getFitStatus() << endl
+              << "----> toyChi2min: " << toyTree.chi2minToy <<endl
+              << "----> GlobaltoyChi2min: " << toyTree.chi2minGlobalToy <<endl
               << "----> dChi2: " << (toyTree.chi2minToy - toyTree.chi2minGlobalToy) << endl
+              << "----> PDFMinNllScan: " << pdf->getMinNllScan() <<endl
+              << "----> PDFMinNllFree: " << pdf->getMinNllFree() << endl
               << "----> dChi2PDF: " << 2 * (pdf->getMinNllScan() - pdf->getMinNllFree()) << endl;
 
         switch (pdf->getFitStatus()) {
