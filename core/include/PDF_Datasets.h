@@ -97,9 +97,14 @@ public:
 
     std::string massVarName="";
     std::string plotDir="";
-    bool blindFlag=0;
-    bool sanity=0;
-    bool isToyDataset=0;
+    bool fBlindFlag=0;
+    bool fSanity=0;
+    bool fIsToyDataset=0;
+    void setSanity(bool sanityFlag){ fSanity = sanityFlag;}
+    void setBlind(bool blindFlag){ fBlindFlag = blindFlag;}
+    void setToyDataset(bool toyFlag){ fIsToyDataset = toyFlag;}
+    void setMassVarname(std::string setVarname){ massVarName = setVarname;}
+    void setPlotDir(std::string plotDirToSet){ plotDir = plotDirToSet;}
     ///////////////////////
 
     int                   NCPU;         //> number of CPU used

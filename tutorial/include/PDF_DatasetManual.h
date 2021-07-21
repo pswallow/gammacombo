@@ -11,16 +11,16 @@ class PDF_DatasetManual : public PDF_Datasets
         PDF_DatasetManual(RooWorkspace* w, int nObs, OptParser* opt);
         RooFitResult* fit(RooDataSet* dataToFit);
         RooFitResult* fitBkg(RooDataSet* dataToFit);
-        void  generateToys(int SeedShift = 0) override;
-        void  generateBkgToys(int SeedShift = 0) override;
-        void  plotting(std::string plotString, std::string plotSuffix, RooDataSet* data, int count=0, bool isToy=0);
+        void generateToys(int SeedShift = 0) override;
+        void generateBkgToys(int SeedShift = 0) override;
+        void plotting(std::string plotString, std::string plotSuffix, RooDataSet* data, int count=0, bool isToy=0);
         ~PDF_DatasetManual();
 
         std::string massVarName =""; 
         std::string plotDir ="plots/pdf/";
-        bool sanity = false; 
-        bool blindFlag = false;
-        bool isToyDataset = false;
+        bool fSanity = false; 
+        bool fBlindFlag = false;
+        bool fIsToyDataset = false;
 
     private:
         int counterToy =0;

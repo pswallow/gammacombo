@@ -2,6 +2,7 @@
 #include "RooExponential.h"
 #include "RooMinimizer.h"
 #include "TMath.h"
+#include <chrono>
 
 PDF_DatasetManual::PDF_DatasetManual(RooWorkspace* w): PDF_Datasets(w){};
 PDF_DatasetManual::PDF_DatasetManual(RooWorkspace* w, int nObs, OptParser* opt): PDF_Datasets::PDF_Datasets(w,nObs,opt){};
@@ -26,10 +27,14 @@ RooFitResult* PDF_DatasetManual::fit(RooDataSet* dataToFit) {
     // Turn off RooMsg
     RooMsgService::instance().setGlobalKillBelow(ERROR);
     RooMsgService::instance().setSilentMode(kTRUE);
+    
+    typedef std::chrono::high_resolution_clock clock;
+    typedef std::chrono::duration<float, std::milli> duration;
+    static clock::time_point start = clock::now();
 
     RooAbsReal* nll; 
-    if(blindFlag){ nll=pdf->createNLL(*dataToFit,RooFit::Extended(kTRUE),RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Range("lsb,rsb"));}
-    else{ nll = pdf->createNLL(*dataToFit, RooFit::Extended(kTRUE), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)));}
+    if(fBlindFlag){nll=pdf->createNLL(*dataToFit,RooFit::Extended(kTRUE),RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Range("lsb,rsb"));}
+    else{nll = pdf->createNLL(*dataToFit, RooFit::Extended(kTRUE), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)));}
 
     double nll_init_val = nll->getVal(nll->getVariables());
     RooFormulaVar* nll_toFit = new RooFormulaVar("nll_norm", ("@0-"+std::to_string(nll_init_val)).c_str(), RooArgList(*nll));
@@ -41,7 +46,6 @@ RooFitResult* PDF_DatasetManual::fit(RooDataSet* dataToFit) {
     min->setStrategy(2);
     int i = 0;
 
-    //min->simplex();
     do{
         min->migrad();
         min->hesse();
@@ -49,7 +53,7 @@ RooFitResult* PDF_DatasetManual::fit(RooDataSet* dataToFit) {
         result = min->save();
         i=i+1;
         
-        if (i>30){ break;}
+        if (i>5){ break;}
         std::cout << i << " | PDF_DatasetManual::Fit: Status=" << result->status() << " |  CovQual=" << result->covQual() <<std::endl;
     }while(!(result->status() == 0 && result->covQual()==3));
 
@@ -57,7 +61,10 @@ RooFitResult* PDF_DatasetManual::fit(RooDataSet* dataToFit) {
     this->fitStatus = result->status();
     this->minNll = nll->getVal();
 
-    if(sanity){
+    duration elapsed = clock::now() - start;
+    std::cout << "Fit Converged in " << elapsed.count()/1000 << "s after " << i << " iterations" <<std::endl;
+
+    if(fSanity){
         plotting((plotDir+"SignalBGDataSet").c_str(), suffix, dataToFit , counterSB, 1);
         counterBGToy+=1;
     }
@@ -102,16 +109,20 @@ RooFitResult* PDF_DatasetManual::fitBkg(RooDataSet* dataToFit) {
     RooMsgService::instance().setGlobalKillBelow(ERROR);
     RooMsgService::instance().setSilentMode(kTRUE);
 
+    typedef std::chrono::high_resolution_clock clock;
+    typedef std::chrono::duration<float, std::milli> duration;
+    static clock::time_point start = clock::now();
+
     // unfortunately Minuit2 does not initialize the status of the roofitresult, if all parameters are constant. Therefore need to stay with standard Minuit fitting.
     // RooFitResult* result  = pdfBkg->fitTo( *dataToFit, RooFit::Save() , RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)), RooFit::Minimizer("Minuit2", "Migrad"));
     
     RooAbsReal* nll_bkg; 
-    if(blindFlag){
+    if(fBlindFlag){
        std::cout << "PDF_DatasetManual::fit: Creating negative log likelihood with blinding" <<std::endl;
-       nll_bkg = pdf->createNLL(*dataToFit, RooFit::Extended(kTRUE), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Range("lsb,rsb"));
+       nll_bkg = pdfBkg->createNLL(*dataToFit, RooFit::Extended(kTRUE), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)),RooFit::Range("lsb,rsb"));
     }
     else{
-       nll_bkg = pdf->createNLL(*dataToFit, RooFit::Extended(kTRUE), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)));
+       nll_bkg = pdfBkg->createNLL(*dataToFit, RooFit::Extended(kTRUE), RooFit::ExternalConstraints(*this->getWorkspace()->set(constraintName)));
     }
     double nll_init_valbg = nll_bkg->getVal(nll_bkg->getVariables());
     RooFormulaVar* nllbg_toFit = new RooFormulaVar("nllbg_norm", ("@0-"+std::to_string(nll_init_valbg)).c_str(), RooArgList(*nll_bkg));
@@ -131,19 +142,20 @@ RooFitResult* PDF_DatasetManual::fitBkg(RooDataSet* dataToFit) {
         result = min->save();
         i=i+1;
         
-        if (i>30){ break;}
+        if (i>5){ break;}
         std::cout << i << " | PDF_DatasetManual::FitBG: Status=" << result->status() << " |  CovQual=" << result->covQual() <<std::endl;
     }while(!(result->status() == 0 && result->covQual()==3));
 
- 
     this->fitStatus = result->status();
     this->minNllBkg = nll_bkg->getVal();
 
     RooMsgService::instance().setSilentMode(kFALSE);
     RooMsgService::instance().setGlobalKillBelow(INFO);
-
     
-    if(sanity){
+    duration elapsed = clock::now() - start;
+    std::cout << "Fit Converged in " << elapsed.count()/1000 << "s after " << i << " iterations" <<std::endl;
+
+    if(fSanity){
         plotting((plotDir+"BackgroundFit").c_str(), suffix, dataToFit, counterBG, 0);
         counterBG+=1;
     }
@@ -162,10 +174,10 @@ void   PDF_DatasetManual::generateToys(int SeedShift) {
     initializeRandomGenerator(SeedShift);
 
     RooDataSet* toys;
-    if(isToyDataset){ toys = this->pdf->generate(RooArgSet(*observables), *(RooDataSet*)(wspc->data(dataName)), wspc->data(dataName)->numEntries(),kFALSE,kFALSE,kFALSE);}
+    if(fIsToyDataset){ toys = this->pdf->generate(RooArgSet(*observables), *(RooDataSet*)(wspc->data(dataName)), wspc->data(dataName)->numEntries(),kFALSE,kFALSE,kFALSE);}
     else{ toys = this->pdf->generate(RooArgSet(*observables), wspc->data(dataName)->numEntries(), kFALSE, kTRUE, "", kFALSE, kTRUE);}
 
-    if(sanity){
+    if(fSanity){
         plotting((plotDir+"ToyDataSet").c_str(), suffix, toys, counterToy, 1);
         counterToy+=1;
     }
@@ -190,10 +202,10 @@ void PDF_DatasetManual::generateBkgToys(int SeedShift) {
         getWorkspace()->var("BFsig")->setConstant(true);
 
         RooDataSet* toys;
-        if(isToyDataset){ toys=this->pdf->generate(RooArgSet(*observables), *(RooDataSet*)(wspc->data(dataName)), wspc->data(dataName)->numEntries(),kFALSE,kFALSE,kFALSE);}
-        else{ toys = this->pdf->generate(RooArgSet(*observables), wspc->data(dataName)->numEntries(), kFALSE, kTRUE, "", kFALSE, kTRUE);    }
+        if(fIsToyDataset){toys=this->pdfBkg->generate(RooArgSet(*observables), *(RooDataSet*)(wspc->data(dataName)), wspc->data(dataName)->numEntries(),kFALSE,kFALSE,kFALSE);}
+        else{toys = this->pdfBkg->generate(RooArgSet(*observables), wspc->data(dataName)->numEntries(), kFALSE, kTRUE, "", kFALSE, kTRUE);    }
     
-        if(sanity){
+        if(fSanity){
             plotting((plotDir+"ToyBGDataSet").c_str(), suffix, toys, counterBGToy, 1);
             counterBGToy+=1;
         }
@@ -231,7 +243,7 @@ void PDF_DatasetManual::plotting(std::string plotString, std::string plotSuffix,
             std::string cutting = "category==category::"+cat;
             data->plotOn(frame,RooFit::Cut(cutting.c_str()));
             RooCategory* slicedCategory = w->cat("category");
-            if(blindFlag){ pdf->plotOn(frame,RooFit::Slice(*slicedCategory, cat.c_str()), RooFit::ProjWData(*data), RooFit::Range("lsb,rsb"),RooFit::NormRange("lsb,rsb"));}
+            if(fBlindFlag){ pdf->plotOn(frame,RooFit::Slice(*slicedCategory, cat.c_str()), RooFit::ProjWData(*data), RooFit::Range("lsb,rsb"),RooFit::NormRange("lsb,rsb"));}
             else{ pdf->plotOn(frame,RooFit::Slice(*slicedCategory, cat.c_str()), RooFit::ProjWData(*data), RooFit::Range("full"),RooFit::NormRange("full"));}
 
             frame->Draw();
@@ -244,7 +256,7 @@ void PDF_DatasetManual::plotting(std::string plotString, std::string plotSuffix,
         TCanvas* canvas2 = new TCanvas("c9","c9",600,600);
         RooPlot* frame2 = w->var(massVarName.c_str())->frame();
         data->plotOn(frame2);
-        if(blindFlag){ pdf->plotOn(frame2, RooFit::Range("lsb,rsb"), RooFit::NormRange("lsb,rsb")); }
+        if(fBlindFlag){ pdf->plotOn(frame2, RooFit::Range("lsb,rsb"), RooFit::NormRange("lsb,rsb")); }
         else{ pdf->plotOn(frame2, RooFit::Range("full"), RooFit::NormRange("full")); }
 
         frame2->Draw();

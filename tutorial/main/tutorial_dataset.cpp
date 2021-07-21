@@ -3,11 +3,13 @@
 #include "RooGaussian.h"
 #include "RooExponential.h"
 #include "RooWorkspace.h"
-#include <iostream>
-#include <vector>
 // #include "PDF_DatasetTutorial.h"
 #include "PDF_DatasetCustom.h"
 #include "PDF_DatasetManual.h"
+#include <iostream>
+#include <vector>
+#include <any>
+std::map<std::string, std::any> argumentParser(int argNo, char* arguments[]);
 
 int main(int argc, char* argv[])
 {
@@ -51,6 +53,7 @@ int main(int argc, char* argv[])
   gROOT->SetBatch(true);
 
   int count=0;
+  int seed=10;
   std::vector<char*> argvTmp;
   bool fullLimitFlag = false;
   bool sanityFlag = false;
@@ -62,7 +65,7 @@ int main(int argc, char* argv[])
   std::string plotDirectory = "plots/pdf/LikelihoodScan/";
   TString dataName="data";
   std::string workspaceName="";
-
+  std::string scanrange="";
   for(int i=0; i<argc; i++){
       if(std::string(argv[i]) == "-a"){
           if(std::string(argv[i+1]) == "pluginbatch"){ plotDirectory="plots/pdf/PluginBatch/"; }
@@ -107,53 +110,86 @@ int main(int argc, char* argv[])
           count+=2;
           i++;
       }
-      else{ argvTmp.push_back(argv[i]); }
+      else if(std::string(argv[i]) == "--seed"){
+          seed=std::atoi(argv[i+1]);
+          count+=2;
+          i++;
+      }
+      else if(std::string(argv[i]) == "--year"){
+          plotDirectory+="2016only/";
+          count+=1;
+      }
+      else{ 
+          if(std::string(argv[i]) == "--scanrange"){ scanrange=std::string(argv[i+1]);}
+          argvTmp.push_back(argv[i]); 
+      }
   }
-  
+
   int argcNew = argc-count;
   char* argvNew[argcNew];
-  for(int i=0; i<argcNew; i++){ argvNew[i] = argvTmp[i]; }
+  for(int i=0; i<argcNew; i++){ 
+      argvNew[i] = argvTmp[i]; 
+  }
 
+  system( ("mkdir -p " + plotDirectory).c_str() );
   /////////////////////////////////////////////
   //// Load the workspace from its file    ////
   /////////////////////////////////////////////
-  std::string workspace_location = std::getenv("LB2LEMUROOT")+std::string("/gammacombo/tutorial/Workspaces/");
-  if(workspaceName==""){ workspaceName = "Lb2Lemu_wsOld_GC3.root";}
+  std::string workspace_location = std::getenv("LB2LEMUROOT")+std::string("/gammacombo/tutorial/");
+  if(workspaceName==""){ workspaceName = "Workspaces/Lb2Lemu_wsOld_GC3.root";}
   std::cout << "Using workspace: " << (workspace_location+workspaceName).c_str() <<std::endl;
   TFile f((workspace_location+workspaceName).c_str());
   RooWorkspace* workspace = (RooWorkspace*)f.Get("w");
-
   if (workspace==NULL){
 	  std::cout<<"No workspace found:"<<std::endl;
 	  std::cout<<"This tutorial requires a .root file containting a special workspace before running it."<<std::endl;
 	  std::cout<<"You can create the workspace by calling the tutorial_dataset_build_workspace command. "<<std::endl;
 	  std::cout<<"The corresponding code can be found in tutorial_dataset_build_workspace.cpp"<<std::endl;
   }
-  //workspace->Print();
+  //if (blindFlag){ workspace->loadSnapshot("BGParameters"); }
   
   /////////////////////////////////////////////
   ////    Pre-Processing before GC run     ////
   /////////////////////////////////////////////
-  std::string massVarname="Lb_DTFLambdaPV_M";
+  //std::string massVarname="Lb_DTFLambdaPV_M"; //For Old Workspaces
+  std::string massVarname="Lb_DTF_L0_PV_M_0";
 
   RooArgSet parameters = workspace->allVars();
-  workspace->defineSet("parameters", parameters);
+  //workspace->defineSet("parameters", parameters);
 
-  workspace->var("BFsig")->setVal(1e-8);
-  workspace->var("BFsig")->setRange(0,140e-9);
+  if (blindFlag){ workspace->var("BFsig")->setVal(0); }
+  //else{ workspace->var("BFsig")->setVal(1e-8);}
+  
+  TString minStr= scanrange;
+  TString maxStr = scanrange;
+  minStr.Replace(minStr.Index(":"), minStr.Sizeof(), "");
+  maxStr.Replace(0, maxStr.Index(":")+1, "");
+  double minRange = minStr.Atof();
+  double maxRange = maxStr.Atof();
+  //workspace->var("BFsig")->setRange(minRange,maxRange);
+  workspace->var("BFsig")->setRange(minRange,140e-9);
   workspace->var("BFsig")->setConstant(false);
 
   if (process){
-      /* //Check parameter values and if they're constant
-         auto iterator = parameters.createIterator();
-         while (RooRealVar* par = (RooRealVar*)iterator->Next() ) {
-         std::cout << par->GetName() << " : " << par->getVal() <<  " Constant: " << par->isConstant() <<std::endl;
-         }*/
+       //Check parameter values and if they're constant
+         //auto iterator = parameters.createIterator();
+         //while (RooRealVar* par = (RooRealVar*)iterator->Next() ) {
+         //std::cout << par->GetName() << " : " << par->getVal() <<  " | isConstant: " << par->isConstant() <<std::endl;
+         //}
 
+      try{
+          workspace->set("NeededVars");
+          throw(20);
+      }
+      catch(int e){
+          std::cout << "NeededVars not in workspace - adding to workspace..." <<std::endl;
+            workspace->extendSet("NeededVars","Lb_DTF_L0_PV_M_0,category,P_TRACK_Type,Pi_P,L1_PT,L2_PT,P_PT,P_P,Lb_DTF_L0_PV_M,xgboostME1,P_PIDp,Year,L1_P,L2_MC12TuneV4_ProbNNmu,L1_MC12TuneV4_ProbNNe,L2_M,L0_P,Pi_TRACK_Type,L2_P,L1_M,Lb_M,L1_HasBremAdded,Pi_PT,L2_MC15TuneV1_ProbNNmu,L1_MC15TuneV1_ProbNNe");
+      }
       std::vector<std::string> signalPar{"a_Brem_DD","a_Brem_LL","a_NoBrem_DD","a_NoBrem_LL","a2_Brem_DD","a2_Brem_LL","a2_NoBrem_DD","a2_NoBrem_LL",
           "l_Brem_DD","l_Brem_LL","l_NoBrem_DD","l_NoBrem_LL","m_Brem_DD","m_Brem_LL","m_NoBrem_DD","m_NoBrem_LL",
           "s_Brem_DD","s_Brem_LL","s_NoBrem_DD","s_NoBrem_LL"};
 
+      /*
       //Hold constrained variables constant or make "free"
       auto iterator = workspace->set("constrained_variables")->createIterator();
       while ( RooRealVar* constr_var = (RooRealVar*)iterator->Next() ){
@@ -171,19 +207,20 @@ int main(int argc, char* argv[])
           }
       }
       delete iterator;
+      */
 
       //Setting Some Reasonable Limits
       std::string categories[8] = {"Brem_DD_Run1","Brem_LL_Run1","NoBrem_DD_Run1","NoBrem_LL_Run1","Brem_DD_Run2","Brem_LL_Run2","NoBrem_DD_Run2","NoBrem_LL_Run2"};
       for(int i=0; i<8; i++){
           std::string cat = categories[i];
 
-          auto val = workspace->var(("Nbkg_"+cat).c_str())->getVal();
-          workspace->var(("Nbkg_"+cat).c_str())->setMin(0.5*val);
-          workspace->var(("Nbkg_"+cat).c_str())->setMax(1.5*val);
+          //auto val = workspace->var(("Nbkg_"+cat).c_str())->getVal();
+          //workspace->var(("Nbkg_"+cat).c_str())->setMin(0.5*val);
+          //workspace->var(("Nbkg_"+cat).c_str())->setMax(1.5*val);
 
-          auto val_tau_a = workspace->var(("tau_a_"+cat).c_str())->getVal();
-          workspace->var(("tau_a_"+cat).c_str())->setMin(1.5*val_tau_a);
-          workspace->var(("tau_a_"+cat).c_str())->setMax(0.5*val_tau_a);
+          //auto val_tau_a = workspace->var(("tau_a_"+cat).c_str())->getVal();
+          //workspace->var(("tau_a_"+cat).c_str())->setMin(1.5*val_tau_a);
+          //workspace->var(("tau_a_"+cat).c_str())->setMax(0.5*val_tau_a);
 
           //auto val_tau_b = workspace->var(("tau_b_"+cat).c_str())->getVal();
           //workspace->var(("tau_b_"+cat).c_str())->setMin(1.5*val_tau_a);
@@ -213,12 +250,13 @@ int main(int argc, char* argv[])
       arg->parseArguments(argcNew, argvNew);
 
       PDF_Datasets* pdfToy;
-      if(isManualFit){ pdfToy= new PDF_DatasetManual(workspace,1,arg); }
-      else{ pdfToy= new PDF_DatasetCustom(workspace,1,arg); }
+      if(isManualFit){ 
+          pdfToy= new PDF_DatasetManual(workspace,1,arg); 
+      }
+      else{ 
+          pdfToy= new PDF_DatasetCustom(workspace,1,arg); 
+      }
 
-      //PDF_DatasetManual* pdfToy= new PDF_DatasetManual(workspace,1,arg); 
-      //PDF_DatasetCustom* pdfToy= new PDF_DatasetCustom(workspace,1,arg); 
-      
       RooMsgService::instance().setGlobalKillBelow(ERROR);
       RooMsgService::instance().setSilentMode(kTRUE);
 
@@ -230,21 +268,16 @@ int main(int argc, char* argv[])
       pdfToy->initParameters("parameters"); // all parameters
       pdfToy->initConstraints("constraints"); // RooArgSet containing the "constraint" PDF's
       pdfToy->addFitObs(massVarname);                         // this is not required but will make some sanity plots
-      pdfToy->massVarName=massVarname;
-      pdfToy->sanity = sanityFlag;
-      pdfToy->blindFlag = true;
-      pdfToy->isToyDataset=useToy;
-      pdfToy->plotDir = plotDirectory;
+      pdfToy->setMassVarname(massVarname);
+      pdfToy->setSanity(sanityFlag);
+      pdfToy->setBlind(true);
+      pdfToy->setToyDataset(useToy);
+      pdfToy->setPlotDir(plotDirectory+"initial/");
+      system( ("mkdir -p " + plotDirectory+"initial/").c_str() );
 
-      //RooFitResult* dataFitResult = (RooFitResult*)workspace->genobj("data_fit_result");
-      //pdfToy->loadExtParameters(dataFitResult);
-      RooFitResult* dataToyBGFitResult = (RooFitResult*)workspace->genobj("data_toy_fit_result");
+      RooFitResult* dataToyBGFitResult = (RooFitResult*)workspace->genobj("data_bg_fit_result");
       pdfToy->loadExtParameters(dataToyBGFitResult);
-      //pdfToy->fitBkg(pdfToy->getData());
-      //RooFitResult* toyFitResult = pdfToy->fitBkg(pdfToy->getData());
-      //pdfToy->loadExtParameters(toyFitResult);
-      //toyFitResult->SetName("data_fit_result");
-      pdfToy->generateBkgToys(10); //Set a seed for a reproducible dataToy set
+      pdfToy->generateBkgToys(seed); //Set a seed for a reproducible dataToy set
       RooDataSet* toyData = pdfToy->getBkgToyObservables();
       toyData->SetName("dataToy");
 
@@ -256,16 +289,11 @@ int main(int argc, char* argv[])
   }
 
   // Construct the PDF and pass the workspace to it
-  //    note that you can write your own PDF_DatasetsTutorial Class which defines your own fitting procedure etc.
-  //    this should inherit from PDF_Datasets
-
+  // You can write your own PDF_DatasetsTutorial Class which defines your own fitting procedure etc. This should inherit from PDF_Datasets
   PDF_Datasets* pdf;
   if(isManualFit){pdf = new PDF_DatasetManual(workspace); }
   else{pdf = new PDF_DatasetCustom(workspace); }
 
-  //PDF_Datasets* pdf = new PDF_Datasets(workspace);
-  //PDF_DatasetCustom* pdf = new PDF_DatasetCustom(workspace);
-  //PDF_DatasetManual* pdf = new PDF_DatasetManual(workspace);
   pdf->initData(dataName); // this is the name of the dataset in the workspace
   pdf->initPDF("model"); // this the name of the pdf in the workspace (without the constraints)
   pdf->initBkgPDF("bgModel"); // this the name of the background pdf in the workspace (without the constraints)
@@ -279,15 +307,15 @@ int main(int argc, char* argv[])
   //pdf->unblind("mass", "[4360:6360]" );
 
   //Additional Options given to custom pdf
-  pdf->massVarName = massVarname;
-  pdf->plotDir = plotDirectory;
-  pdf->sanity = sanityFlag;
-  pdf->blindFlag = blindFlag;
-  pdf->isToyDataset = useToy;
-
-  system( ("mkdir -p " + plotDirectory).c_str() );
-
-  //pdf->printParameters();
+  pdf->setMassVarname(massVarname);
+  pdf->setPlotDir(plotDirectory);
+  pdf->setSanity(sanityFlag);
+  pdf->setBlind(blindFlag);
+  pdf->setToyDataset(useToy);
+  pdf->printParameters();
+  workspace->Print("V");
+  //std::cout << "Wait... "<< dataName <<std::endl;
+  //std::cin.get();
 
   // Start the Gammacombo Engine
   GammaComboEngine gc("tutorial_dataset", argcNew, argvNew);

@@ -11,5 +11,7 @@
 
 #pragma link C++ class RooDoubleCB+;
 //#pragma link C++ defined_in "RooDoubleCB.h";
+#pragma link C++ class RooIpatia2+;
+//#pragma link C++ defined_in "RooIpatia2.h";
 
 #endif

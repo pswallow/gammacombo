@@ -25,6 +25,7 @@ IF(HAS_CUSTOMROOTOBJECTS)
 	)
 	SET(COMBINER_DICTIONARY_SOURCES
                 RooDoubleCB.h # <-- add header files here
+                RooIpatia2.h
 	)
 ENDIF()
 
